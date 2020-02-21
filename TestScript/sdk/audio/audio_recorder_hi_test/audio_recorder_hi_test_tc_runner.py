@@ -749,8 +749,6 @@ class AudioRecorderHiTestTcRunner(TestRunner):
 if __name__ == "__main__":
     parser = RunnerParser()
 
-    parser.add_argument('--peer_bin', help='Recorder binary file path')
-    parser.add_argument('--peer_device', metavar='SERIAL_PORT', help='Set recorder')
     parser.add_argument('--player_fs_ready', action='store_true',
                         help='Player folders and files already created')
     parser.add_argument('--recorder_fs_ready', action='store_true',
