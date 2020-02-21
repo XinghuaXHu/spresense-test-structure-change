@@ -1,0 +1,196 @@
+; +------- Configurable variable ------------------------------+
+
+; +------------------------------------------------------------+
+
+include '..\comport.ttl'
+
+; +------- Variable -------------------------------------------+
+
+
+
+; +------- Batch Config----------------------------------------+
+
+;; ②ログファイル名の設定（ログフィルのフルパス）
+;;;; ②−１、保存パスを取得
+getdir DIR
+dirname FULLPATH DIR
+;;;; ②−２、ログファイル名を指定
+getdate LOG_NAME '..\..\log\cb_waitpin_%Y%m%d%H%M%S.log'
+;;;; ②−３、フルパス完成（合体）
+strconcat FULLPATH LOG_NAME
+ 
+;; ③port接続コマンド作成
+COMMAND = '/C=' 
+strconcat COMMAND COM_PORT 
+strconcat COMMAND ' /BAUD=' 
+strconcat COMMAND BAUDRATE
+ 
+;; ④サーバ接続
+connect COMMAND
+
+logclose
+logopen FULLPATH 0 1 0 1
+
+; +------- Main routine ---------------------------------------+
+setdebug 0
+setsync 1
+
+timeout=60
+
+pause 2
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+send 'lteapi stpinenb LTE_PIN_ENABLE '
+sendln DEFAULTPIN
+
+wait '[API_OK] lte_set_pinenable return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] stpnenbl_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi pwroff'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwroff_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+dispstr 'CB_5-4 START'#$0A
+
+dispstr 'CB_34-3 START'#$0A
+
+sendln 'lteapi strpsmst'
+wait '[API_OK] lte_set_report_simstat return val : "0"' '[API_NG]'
+call check_fail
+
+dispstr 'CB_34-3 SUCCESS'#$0A
+
+sendln 'lteapi atchnet'
+wait '[API_OK] lte_attach_network return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_NG] atchnet_cb result : "1"' '[CB_OK]'
+call check_fail
+wait '[CB_NG] atchnet_cb error : "1"'
+call check_fail
+
+dispstr 'CB_5-4 SUCCESS'#$0A
+dispstr 'CB_16-2 START'#$0A
+dispstr 'CB_16-4 START'#$0A
+
+sendln 'lteapi gtphno'
+wait '[API_OK] lte_get_phoneno return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_NG] gtphno_cb result : "1"' '[CB_OK]'
+call check_fail
+wait '[CB_NG] gtphno_cb error : "1"'
+call check_fail
+
+dispstr 'CB_16-2 SUCCESS'#$0A
+dispstr 'CB_16-4 SUCCESS'#$0A
+
+dispstr 'CB_17-2 START'#$0A
+dispstr 'CB_17-4 START'#$0A
+
+sendln 'lteapi gtimsi'
+wait '[API_OK] lte_get_imsi return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_NG] gtimsi_cb result : "1"' '[CB_OK]'
+call check_fail
+
+dispstr 'CB_17-2 SUCCESS'#$0A
+dispstr 'CB_17-4 SUCCESS'#$0A
+
+
+dispstr 'API_34-4 START'#$0A
+
+sendln 'lteapi strpsmst NULL'
+wait '[API_OK] lte_set_report_simstat return val : "0"' '[API_NG]'
+call check_fail
+
+timeout=20
+
+sendln 'lteapi atchnet'
+wait '[API_OK] lte_attach_network return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_VAL] smstrepo_cb simstat : "2"'
+if result!=0 then
+    dispstr 'send finish command'#$0A
+    sendln 'lteapi fin'
+    dispstr 'CB_WAITPIN_TEST FAILURE'#$0A
+    call error_output
+    closett
+    end
+else
+
+dispstr 'API_34-4 SUCCESS'#$0A
+dispstr 'API_34-3, CB_34-5 START'#$0A
+
+sendln 'lteapi strpsmst'
+wait '[API_OK] lte_set_report_simstat return val : "0"' '[API_NG]'
+call check_fail
+pause 1
+
+send 'lteapi entpin '
+send DEFAULTPIN
+send ' '
+sendln DEFAULTPIN
+
+wait '[API_OK] lte_enter_pin return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_VAL] smstrepo_cb simstat : "4"'
+call check_fail
+
+dispstr 'API_34-3, CB_34-5 SUCCESS'#$0A
+
+dispstr 'CB_WAITPIN_TEST SUCCESS'#$0A
+
+dispstr '----PINSET_UNDO_PROCESS----'#$0A
+
+send 'lteapi stpinenb LTE_PIN_DISABLE '
+sendln DEFAULTPIN
+
+wait '[API_OK]'
+wait '[CB_OK]'
+
+sendln 'lteapi fin'
+closett
+
+end
+; +-------Sub routine ----------------------------------------+
+
+:check_fail
+if result!=1 then
+    dispstr 'send finish command'#$0A
+    sendln 'lteapi fin'
+    dispstr 'CB_WAITPIN_TEST FAILURE'#$0A
+    call error_output
+    closett
+    end
+endif
+return
+
+:error_output
+tz="GMT"
+getdate DEBUG_LOG_NAME '..\..\log\cb_waitpin_%Y%m%d%H%M%S.error'
+fileopen file DEBUG_LOG_NAME 1
+if -1==file then
+    messagebox 'File open failed!!' 'Error'
+    goto exit
+endif
+
+filewriteln file 'THIS Test is ERROR. Please check the log.'
+
+return

@@ -1,0 +1,74 @@
+;test_parameter
+
+;test_apn_type
+lteapi radiooff
+ACTPDN_CASE1  'lteapi actpdn teasapn 1 0 0'
+ACTPDN_CASE2  'lteapi actpdn teasapn 2 0 0'
+ACTPDN_CASE3  'lteapi actpdn teasapn 4 0 0'
+ACTPDN_CASE4  'lteapi actpdn teasapn 8 0 0'
+ACTPDN_CASE5  'lteapi actpdn teasapn 16 0 0'
+ACTPDN_CASE6  'lteapi actpdn teasapn 32 0 0'
+ACTPDN_CASE7  'lteapi actpdn teasapn 128 0 0'
+ACTPDN_CASE8  'lteapi actpdn teasapn 256 0 0'
+ACTPDN_CASE9  'lteapi actpdn teasapn 512 0 0'
+ACTPDN_CASE10 'lteapi actpdn teasapn 1024 0 0'
+ACTPDN_CASE11 'lteapi actpdn teasapn 1024 0 0'
+;test_apn_type(IA|IMS , IA|DEF)
+ACTPDN_CASE12 'lteapi actpdn teasapn 514 0 0'
+ACTPDN_CASE13 'lteapi actpdn teasapn 640 0 0'
+
+lteapi actpdn teasapn 1407 0 0
+;test_apn_type(full bit)
+ACTPDN_CASE14 'lteapi actpdn teasapn 2047 0 0'
+
+;test_apn_name(normal)
+ACTPDN_CASE15 'lteapi actpdn teasapn 514 0 0'
+;test_apn_name(just)
+ACTPDN_CASE16 'lteapi actpdn abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuv 514 0 0'
+;test_apn_name(over)
+ACTPDN_CASE18 'lteapi actpdn abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz 514 0 0'
+;test_iptype
+ACTPDN_CASE19 'lteapi actpdn teasapn 514 0 0'
+ACTPDN_CASE20 'lteapi actpdn teasapn 514 1 0'
+ACTPDN_CASE21 'lteapi actpdn teasapn 514 2 0'
+;test_auth_type
+ACTPDN_CASE22 'lteapi actpdn teasapn 514 0 0'
+ACTPDN_CASE23 'lteapi actpdn teasapn 514 0 1'
+ACTPDN_CASE24 'lteapi actpdn teasapn 514 0 2'
+ACTPDN_CASE25 'lteapi actpdn teasapn 514 0 1 usr1 pwd'
+ACTPDN_CASE26 'lteapi actpdn teasapn 514 0 2 usr1 pwd'
+
+;test_user_name(just)
+ACTPDN_CASE27 'lteapi actpdn teasapn 514 0 2 abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijk pwd'
+;test_user_name(over)
+ACTPDN_CASE28 'lteapi actpdn teasapn 514 0 2 abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstu pwd'
+
+;test_passwrd(just)
+ACTPDN_CASE29 'lteapi actpdn teasapn 514 0 2 usr1 abcdefghijklmnopqrstuvwxyzabcdef'
+;test_user_name(over)
+ACTPDN_CASE30 'lteapi actpdn teasapn 514 0 2 usr1 abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstu'
+
+;test_deact_session_id
+DACTPDN_CASE01 'lteapi deactpdn 0'
+DACTPDN_CASE02 'lteapi deactpdn 1'
+DACTPDN_CASE03 'lteapi deactpdn 2'
+DACTPDN_CASE04 'lteapi deactpdn 2'
+DACTPDN_CASE05 'lteapi deactpdn 255'
+DACTPDN_CASE06 'lteapi deactpdn 256'
+DACTPDN_CASE07 'lteapi deactpdn 512'
+
+;test_dataallow_settion_id
+DATALLOW_CASE01 'lteapi dataallow 0 0 0'
+DATALLOW_CASE01 'lteapi dataallow 1 0 0'
+DATALLOW_CASE01 'lteapi dataallow 2 0 0'
+DATALLOW_CASE01 'lteapi dataallow 3 0 0'
+DATALLOW_CASE01 'lteapi dataallow 255 0 0'
+DATALLOW_CASE01 'lteapi dataallow 256 0 0'
+DATALLOW_CASE01 'lteapi dataallow 512 0 0'
+
+;test_dataallow_allow
+DATALLOW_CASE01 'lteapi dataallow 1 0 0'
+DATALLOW_CASE01 'lteapi dataallow 1 1 0'
+DATALLOW_CASE01 'lteapi dataallow 1 1 1'
+DATALLOW_CASE01 'lteapi dataallow 1 0 1'
+

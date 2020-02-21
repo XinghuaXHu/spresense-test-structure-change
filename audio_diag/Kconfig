@@ -1,0 +1,30 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config TEST_AUDIO_DIAG
+    bool "Audio diag test"
+    default n
+    ---help---
+        Enable audio diag test
+
+if TEST_AUDIO_DIAG
+
+config TEST_AUDIO_DIAG_APP_NAME
+	string "Application name"
+	default "adiag"
+
+config TEST_AUDIO_DIAG_PROGNAME
+	string "Program name"
+	default "audio_diag"
+
+config TEST_AUDIO_DIAG_PRIORITY
+	int "Audio diag task priority"
+	default 100
+
+config TEST_AUDIO_DIAG_STACKSIZE
+	int "Audio diag stack size"
+	default 2048
+
+endif

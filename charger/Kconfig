@@ -1,0 +1,30 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config TEST_CHARGER
+	bool "Charger driver test"
+	default n
+	---help---
+		Enable the battery charger driver test
+
+if TEST_CHARGER
+
+config TEST_CHARGER_PROGNAME
+	string "Program name"
+	default "charger"
+	depends on BUILD_KERNEL
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config TEST_CHARGER_PRIORITY
+	int "Charger task priority"
+	default 100
+
+config TEST_CHARGER_STACKSIZE
+	int "Charger stack size"
+	default 2048
+
+endif

@@ -1,0 +1,3 @@
+<20-02-20 10:45:39> INFO     SAVING LOGS IN: ../../../logs/-audio_recorder_hi_test/log_2020-02-20_10h45m39s/summary.txt
+<20-02-20 10:45:39> INFO     --------------------------- AudioRecorderHiTestTcRunner SETUP ----------------------------
+<20-02-20 10:45:39> INFO     -------------------------- AudioRecorderHiTestTcRunner TEARDOWN --------------------------

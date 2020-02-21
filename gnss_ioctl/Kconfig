@@ -1,0 +1,31 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+# Event notification POLL only.
+#
+config EXAMPLES_GNSS_IOCTL
+	bool "GNSS_IOCTL ioctl test"
+	default n
+  depends on CXD56_GNSS
+	---help---
+		Enable the GNSS_IOCTL function test
+
+if EXAMPLES_GNSS_IOCTL
+
+config EXAMPLES_GNSS_IOCTL_PROGNAME
+	string "Program name"
+	default "gnss_ioctl"
+	depends on BUILD_KERNEL
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config EXAMPLES_GNSS_IOCTL_PRIORITY
+	int "GNSS_IOCTL task priority"
+	default 100
+
+config EXAMPLES_GNSS_IOCTL_STACKSIZE
+	int "GNSS_IOCTL stack size"
+	default 2048
+
+endif

@@ -1,0 +1,12 @@
+sendln "player SetPlayerMode"
+sendln "dbg level AS I"
+sendln '#####  [ID-1432] Play-Stop-Next-Prev-Play-Stop  #####'
+sendln "player PlayMusic"
+pause 5
+sendln "player StopMusic"
+sendln "player NextTrack"
+sendln "player PrevTrack"
+sendln "player PlayMusic"
+pause 5
+sendln "player StopMusic"
+sendln "player SetReadyStatus"

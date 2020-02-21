@@ -1,0 +1,8 @@
+{
+ "testsw":
+   {
+     "dut_port":{"build_path": ["sdk/audio/audio_recorder_hi/defconfig/audio_player-defconfig"]},
+     "peer_port":{"build_path": ["sdk/audio/audio_recorder_hi/defconfig/recorder_hi_test-defconfig"],
+                "appscheck": ["recorder_hi","msconn","msdis"]}
+   }
+}

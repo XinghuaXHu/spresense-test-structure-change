@@ -1,0 +1,6 @@
+sendln "player SetPlayerMode"
+sendln "dbg level AS I"
+sendln '#####  Play  #####'
+sendln "player PlayMusic"
+pause 80
+sendln "player StopMusic"

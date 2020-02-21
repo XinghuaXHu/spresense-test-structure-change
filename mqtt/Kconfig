@@ -1,0 +1,67 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config TEST_MQTT
+	bool "MQTT test"
+	default n
+	select EXTERNALS_MQTT
+	---help---
+		Enable the mqtt test
+
+if TEST_MQTT
+
+config TEST_MQTT_PROGNAME
+	string "Program name"
+	default "mqtt"
+	depends on BUILD_KERNEL
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config TEST_MQTT_PRIORITY
+	int "mqtt test task priority"
+	default 100
+
+config TEST_MQTT_STACKSIZE
+	int "mqtt test stack size"
+	default 2048
+
+config TEST_MQTT_STACKSIZE_IN_USING_MBEDTLS
+	int "lte_mqtt stack size in using mbedTLS"
+	default 5120
+
+config TEST_MQTT_APN_NAME
+	string "Access Point Name"
+	default ""
+
+config TEST_MQTT_APN_IPTYPE
+	int "IP type"
+	default 0
+	range 0 2
+	---help---
+		IP type is selected from IP, IPv6 and IPv4/v6.
+		Values are IP=0, IPv6=1 and IPv4/v6=2.
+
+config TEST_MQTT_APN_AUTHTYPE
+	int "Authentication type"
+	default 0
+	range 0 2
+	---help---
+		Authentication type is selected from NONE, PAP and CHAP.
+		Values are NONE=0, PAP=1, CHAP=2.
+
+config TEST_MQTT_APN_USERNAME
+	string "Username used for authentication"
+	default ""
+
+config TEST_MQTT_APN_PASSWD
+	string "Password used for authentication"
+	default ""
+
+config TEST_MQTT_ROOTCA
+	string "MQTT server root CA file name"
+	default "/mnt/vfat/DSTRootCAX3.crt"
+
+endif

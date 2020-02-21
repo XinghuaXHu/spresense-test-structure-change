@@ -1,0 +1,12 @@
+sendln "player SetPlayerMode"
+sendln "dbg level AS I"
+sendln '#####  Play-Dec-Stop 2  #####'
+sendln "player PlayMusic"
+pause 2
+for i 1 4
+ int2str cnt i
+ sendln '#####   DecVol 'cnt'‰ñ   #####'
+ sendln "player DecVol"
+next
+pause 2
+sendln "player StopMusic"

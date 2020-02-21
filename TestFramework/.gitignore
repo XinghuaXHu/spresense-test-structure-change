@@ -1,0 +1,9 @@
+src/**/*.pyc
+*.xml
+!config.xml
+!example_config.xml
+!src/unit/*.xml
+!src/unit/resources/config_files/*.xml
+**/.idea/
+**/*.html
+**/jlink.log

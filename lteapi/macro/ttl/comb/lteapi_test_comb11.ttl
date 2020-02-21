@@ -1,0 +1,198 @@
+; +------- Configurable variable ------------------------------+
+
+; +------------------------------------------------------------+
+
+include '..\comport.ttl'
+
+; +------- Variable -------------------------------------------+
+
+
+; +------- Batch Config----------------------------------------+
+
+;; ②ログファイル名の設定（ログフィルのフルパス）
+;;;; ②−１、保存パスを取得
+getdir DIR
+dirname FULLPATH DIR
+;;;; ②−２、ログファイル名を指定
+getdate LOG_NAME '..\..\log\COMB_11_%Y%m%d%H%M%S.log'
+;;;; ②−３、フルパス完成（合体）
+strconcat FULLPATH LOG_NAME
+ 
+;; ③port接続コマンド作成
+COMMAND = '/C=' 
+strconcat COMMAND COM_PORT 
+strconcat COMMAND ' /BAUD=' 
+strconcat COMMAND BAUDRATE
+ 
+;; ④サーバ接続
+connect COMMAND
+
+logclose
+logopen FULLPATH 0 1 0 1
+
+; +------- Main routine ---------------------------------------+
+setdebug 0
+setsync 1
+
+timeout=60
+
+pause 2
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+send 'lteapi stapn '
+send SESSION_ID
+send ' '
+send APNNAME
+send ' '
+send IP_TYPE
+send ' '
+send AUTH_TYPE
+send ' '
+send USERNAME
+send ' '
+sendln PASSWARD
+wait '[API_OK] lte_set_apn return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] setapn_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi atchnet'
+wait '[API_OK] lte_attach_network return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] atchnet_cb result : "0"' '[CB_NG]'
+call check_fail
+sendln 'lteapi dataon 1'
+wait '[API_OK] lte_data_on return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] daton_cb result : "0"' '[CB_NG]'
+call check_fail
+
+dispstr 'COMB_11_1 START'#$0A
+
+dispstr 'API_12_5 START'#$0A
+dispstr 'CB_12_1 START'#$0A
+
+sendln 'lteapi stdtcfg LTE_DATA_TYPE_USER LTE_ENABLE LTE_ENABLE'
+wait '[API_OK] lte_set_dataconfig return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] setdtcfg_cb result : "0"' '[CB_NG]'
+call check_fail
+
+dispstr 'API_12_5 SUCCESS'#$0A
+dispstr 'CB_12_1 SUCCESS'#$0A
+
+dispstr 'API_11_5 START'#$0A
+dispstr 'CB_11_1 START'#$0A
+dispstr 'CB_11_3 START'#$0A
+dispstr 'CB_11_5 START'#$0A
+dispstr 'CB_11_7 START'#$0A
+
+sendln 'lteapi gtdtcfg LTE_DATA_TYPE_USER'
+wait '[API_OK] lte_get_dataconfig return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] getdtcfg_cb result : "0"' '[CB_NG]'
+call check_fail
+wait '[CB_VAL] getdtcfg_cb data_type : "0"'
+call check_fail
+wait '[CB_VAL] getdtcfg_cb general   : "1"'
+call check_fail
+wait '[CB_VAL] getdtcfg_cb roaming   : "1"'
+call check_fail
+
+dispstr 'API_11_5 SUCCESS'#$0A
+dispstr 'CB_11_1 SUCCESS'#$0A
+dispstr 'CB_11_3 SUCCESS'#$0A
+dispstr 'CB_11_5 SUCCESS'#$0A
+dispstr 'CB_11_7 SUCCESS'#$0A
+
+dispstr 'COMB_11_1 SUCCESS'#$0A
+dispstr 'COMB_11_2 START'#$0A
+
+sendln 'lteapi stdtcfg LTE_DATA_TYPE_IMS LTE_DISABLE LTE_DISABLE'
+wait '[API_OK] lte_set_dataconfig return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] setdtcfg_cb result : "0"' '[CB_NG]'
+call check_fail
+
+dispstr 'CB_11_4 START'#$0A
+dispstr 'CB_11_6 START'#$0A
+dispstr 'CB_11_8 START'#$0A
+
+sendln 'lteapi gtdtcfg LTE_DATA_TYPE_IMS'
+wait '[API_OK] lte_get_dataconfig return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] getdtcfg_cb result : "0"' '[CB_NG]'
+call check_fail
+wait '[CB_VAL] getdtcfg_cb data_type : "1"'
+call check_fail
+wait '[CB_VAL] getdtcfg_cb general   : "0"'
+call check_fail
+wait '[CB_VAL] getdtcfg_cb roaming   : "0"'
+call check_fail
+
+dispstr 'CB_11_4 SUCCESS'#$0A
+dispstr 'CB_11_6 SUCCESS'#$0A
+dispstr 'CB_11_8 SUCCESS'#$0A
+
+dispstr 'COMB_11_2 SUCCESS'#$0A
+dispstr 'COMB_11_3 START'#$0A
+
+sendln 'lteapi gtdtcfg LTE_DATA_TYPE_USER'
+wait '[API_OK] lte_get_dataconfig return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] getdtcfg_cb result : "0"' '[CB_NG]'
+call check_fail
+wait '[CB_VAL] getdtcfg_cb data_type : "0"'
+call check_fail
+wait '[CB_VAL] getdtcfg_cb general   : "1"'
+call check_fail
+wait '[CB_VAL] getdtcfg_cb roaming   : "1"'
+call check_fail
+
+dispstr 'COMB_11_3 SUCCESS'#$0A
+
+sendln 'lteapi stdtcfg LTE_DATA_TYPE_IMS LTE_ENABLE LTE_ENABLE'
+wait '[API_OK] lte_set_dataconfig return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] setdtcfg_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi fin'
+
+dispstr 'COMB_11_11TEST SUCCESS'#$0A
+closett
+end
+; +-------Sub routine ----------------------------------------+
+
+:check_fail
+if result!=1 then
+    dispstr 'send finish command'#$0A
+    sendln 'lteapi fin'
+    dispstr 'COMB_11_11TEST FAILURE'#$0A
+    call error_output
+closett
+    end
+endif
+return
+
+
+:error_output
+tz="GMT"
+getdate DEBUG_LOG_NAME '..\..\log\comb_11_%Y%m%d%H%M%S.error'
+fileopen file DEBUG_LOG_NAME 1
+if -1==file then
+    messagebox 'File open failed!!' 'Error'
+    goto exit
+endif
+
+filewriteln file 'THIS Test is ERROR. Please check the log.'
+
+return

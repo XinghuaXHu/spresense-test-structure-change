@@ -1,0 +1,63 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config TEST_DECODER_COMPONENT
+	bool "decode component test"
+	default n
+	select MEMUTILS_MEMORY_MANAGER
+	select MEMUTILS_MESSAGE
+	select MEMUTILS_S_STL
+	select MEMUTILS_SIMPLE_FIFO
+
+
+config TEST_DECODER_COMPONENT_PROGNAME
+	string "Program name"
+	default "test_decoder_component"
+	depends on TEST_DECODER_COMPONENT
+
+config TEST_DECODER_COMPONENT_PRIORITY
+	int "Test decoder task priority"
+	default 100
+	depends on TEST_DECODER_COMPONENT
+
+config TEST_DECODER_COMPONEN_STACKSIZE
+	int "Test decoder stack size"
+	default 4096
+	depends on TEST_DECODER_COMPONENT
+
+config TEST_DECODER_FILE_MOUNTPT
+	string "Test contents file mount path"
+	default "/mnt/vfat/AUDIO"
+	depends on TEST_DECODER_COMPONENT
+	---help---
+		The path to the play file mount point. Default: /mnt/vfat/AUDIO
+
+config AUDIOUTILS_PLAYLIST_PLAYLISTFILE_MOUNTPT
+	string "test playlist file mount path"
+	default "/mnt/vfat/PLAYLIST"
+	depends on TEST_DECODER_COMPONENT
+	---help---
+		The path to the playlist file mount point. Default: /mnt/vfat/PLAYLIST
+
+config AUDIOUTILS_DSP_MOUNTPT
+	string "DSP image mount path"
+	default "/mnt/vfat/BIN"
+	depends on TEST_DECODER_COMPONENT
+	---help---
+		The path to the DSP mount point. Default: /mnt/vfat/BIN"
+
+config TEST_DECODER_OUTPUT_FILE_MOUNTPT
+	string "decoding file mount path"
+	default "/mnt/vfat/DEC"
+	depends on TEST_DECODER_COMPONENT
+	---help---
+		The path to the recording file mount point. Default: /mnt/vfat/DEC
+
+config AUDIOUTILS_DSP_DEBUG_DUMP
+	bool "dsp debug dump"
+	default n
+	depends on TEST_DECODER_COMPONENT && CXD56_LOG
+	---help---
+		Enable Dsp Debug Dump

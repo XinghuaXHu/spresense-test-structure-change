@@ -1,0 +1,26 @@
+
+config TEST_SBIN
+	bool "Secure binary test"
+	default n
+	---help---
+		Enable the sbin app
+
+if TEST_SBIN
+
+config TEST_SBIN_PROGNAME
+	string "Program name"
+	default "sbin"
+	depends on BUILD_KERNEL
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config TEST_SBIN_PRIORITY
+	int "sbin task priority"
+	default 100
+
+config TEST_SBIN_STACKSIZE
+	int "sbin stack size"
+	default 2048
+
+endif

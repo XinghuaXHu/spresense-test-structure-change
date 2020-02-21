@@ -1,0 +1,8 @@
+sendln '#####  WAV eMMC ID-100  #####'
+for i 1 3
+ int2str cnt i
+ sendln '#####  SetRecorderMode-SetReadyStatus 'cnt'  #####'
+ sendln "voice_recorder SetRecorderMode"
+ sendln "voice_recorder SetReadyStatus"
+next
+sendln '#####   End   #####'

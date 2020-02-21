@@ -1,0 +1,33 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config EXAMPLES_GNSS_NAVMSG
+	bool "GNSS example output navigation messages"
+	default n
+	depends on CXD56_GNSS
+
+if EXAMPLES_GNSS_NAVMSG
+
+config EXAMPLES_GNSS_NAVMSG_PROGNAME
+	string "Program name"
+	default "gnss_navmsg"
+	depends on BUILD_KERNEL
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config EXAMPLES_NAVMSG_PRIORITY
+	int "NavMsg output task priority"
+	default 100
+
+config EXAMPLES_NAVMSG_STACKSIZE
+	int "NavMsg output stack size"
+	default 2048
+
+config EXAMPLES_NAVMSG_REALTIME_GPSEPH
+	bool "NavMsg output GPS ephemeris in real time"
+	default n
+
+endif

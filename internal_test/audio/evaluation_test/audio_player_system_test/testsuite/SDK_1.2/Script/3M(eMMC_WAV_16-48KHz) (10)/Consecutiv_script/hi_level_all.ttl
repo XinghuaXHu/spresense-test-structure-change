@@ -1,0 +1,30 @@
+sendln '#####  ID-005_008  #####'
+sendln "player SetPlayerMode"
+sendln "dbg level AS I"
+sendln "player PlayMusic"
+pause 7
+sendln "player StopMusic"
+sendln "player SetReadyStatus"
+sendln '#####  ID-009_012  #####'
+sendln "player SetPlayerMode"
+sendln "player PlayMusic"
+pause 50
+sendln "player StopMusic"
+sendln "player SetReadyStatus"
+sendln '#####  ID-014_017  #####'
+sendln "player SetPlayerMode"
+sendln "player PlayMusic"
+pause 3
+sendln "player IncVol"
+pause 5
+sendln "player StopMusic"
+sendln "player SetReadyStatus"
+sendln '#####  ID-018_021  #####'
+sendln "player SetPlayerMode"
+sendln "player PlayMusic"
+pause 3
+sendln "player DecVol"
+pause 5
+sendln "player StopMusic"
+sendln "player SetReadyStatus"
+sendln '#####   End   #####'

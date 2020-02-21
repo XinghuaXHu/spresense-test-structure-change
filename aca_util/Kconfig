@@ -1,0 +1,26 @@
+
+config TEST_ACA_UTIL
+	bool "Aca utility tool"
+	default n
+	---help---
+		Enable the aca_util app
+
+if TEST_ACA_UTIL
+
+config TEST_ACA_UTIL_PROGNAME
+	string "Program name"
+	default "aca_util"
+	depends on BUILD_KERNEL
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config TEST_ACA_UTIL_PRIORITY
+	int "aca_util task priority"
+	default 100
+
+config TEST_ACA_UTIL_STACKSIZE
+	int "aca_util stack size"
+	default 2048
+
+endif

@@ -1,0 +1,25 @@
+sendln "player SetInputDevice 3"
+sendln "player SetPlayerMode"
+sendln "dbg level AS I"
+sendln '#####  Play-Stop (RAM) #####'
+sendln "player InitPlayer 1 0 1 1"
+sendln "player PlayMusic"
+pause 8
+sendln "player StopMusic"
+sendln "player SetReadyStatus"
+sendln "player SetInputDevice 0"
+sendln "player SetPlayerMode"
+sendln '#####  Play-Stop (eMMC) #####'
+sendln "player InitPlayer 1 0 1 3"
+sendln "player PlayMusic"
+pause 15
+sendln "player StopMusic"
+sendln "player SetReadyStatus"
+sendln "player SetInputDevice 3"
+sendln "player SetPlayerMode"
+sendln '#####  Play-Stop (RAM) #####'
+sendln "player InitPlayer 1 0 1 1"
+sendln "player PlayMusic"
+pause 8
+sendln "player StopMusic"
+sendln "player SetReadyStatus"

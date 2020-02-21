@@ -1,0 +1,46 @@
+<!--This is an example configuration file used by automatic test environment.
+    If the user would like to use this file as a template file should be copied,
+    rename and filled with correct settings. -->
+<Configuration>
+    <device>
+        <!-- BLE address -->
+        <address>000000000000</address>
+        <!-- Serial port name -->
+        <serial>/dev/ttyUSB1</serial>
+        <!-- Jlink number -->
+        <jlink>000000000</jlink>
+        <!-- Chip revision -->
+        <chip_rev>00</chip_rev>
+        <!-- Project assigned to this device -->
+        <project>spresense</project>
+        <!-- Port used by JLinkGDBServer -->
+        <gdb_port>2331</gdb_port>
+    </device>
+    <device>
+        <!-- BLE address -->
+        <address>000000000000</address>
+        <!-- Serial port name -->
+        <serial>/dev/ttyUSB2</serial>
+        <!-- Jlink number -->
+        <jlink>000000000</jlink>
+        <!-- Chip revision -->
+        <chip_rev>00</chip_rev>
+        <!-- Project assigned to this device -->
+        <project>spresense</project>
+        <!-- Port used by JLinkGDBServer -->
+        <gdb_port>2331</gdb_port>
+    </device>
+    <!-- Here you can declare as many SDK directories as you like -->
+    <projects>
+        <!-- SDK instance declaration -->
+        <spresense>
+            <!-- Local repository path -->
+            <path>/home/autotest/1.5.0_strc_change/spritzer_sdk_beta/</path>
+            <!-- Tools configurations -->
+            <tools>
+                <binaries>/home/autotest/1.5.0_strc_change/spritzer_sdk_beta/sdk/</binaries>
+                <sdk_tools>/home/autotest/1.5.0_strc_change/spritzer_sdk_beta/sdk/tools/</sdk_tools>
+            </tools>
+        </spresense>
+    </projects>
+</Configuration>

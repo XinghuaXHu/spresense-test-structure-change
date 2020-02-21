@@ -1,0 +1,955 @@
+; +------- Configurable variable ------------------------------+
+
+
+; +------------------------------------------------------------+
+
+include '..\comport.ttl'
+
+; +------- Variable -------------------------------------------+
+
+
+; +------- Batch Config----------------------------------------+
+
+;; ②ログファイル名の設定（ログフィルのフルパス）
+;;;; ②−１、保存パスを取得
+getdir DIR
+dirname FULLPATH DIR
+;;;; ②−２、ログファイル名を指定
+getdate LOG_NAME '..\..\log\COMB_15_%Y%m%d%H%M%S.log'
+;;;; ②−３、フルパス完成（合体）
+strconcat FULLPATH LOG_NAME
+ 
+;; ③port接続コマンド作成
+COMMAND = '/C=' 
+strconcat COMMAND COM_PORT 
+strconcat COMMAND ' /BAUD=' 
+strconcat COMMAND BAUDRATE
+ 
+;; ④サーバ接続
+connect COMMAND
+
+logclose
+logopen FULLPATH 0 1 0 1
+
+; +------- Main routine ---------------------------------------+
+setdebug 0
+setsync 1
+
+pause 2
+
+;timeout=120
+;call comb_1503
+
+timeout= 120
+
+dispstr 'COMB_1504 START'#$0A
+call comb_1504
+dispstr 'COMB_1506 START'#$0A
+call comb_1506
+dispstr 'COMB_1507 START'#$0A
+call comb_1507
+dispstr 'COMB_1507 START'#$0A
+call comb_1508
+dispstr 'COMB_1508 START'#$0A
+call comb_1509
+dispstr 'COMB_1510 START'#$0A
+call comb_1510
+dispstr 'COMB_1511 START'#$0A
+call comb_1511
+dispstr 'COMB_1512 START'#$0A
+call comb_1512
+dispstr 'COMB_1513 START'#$0A
+call comb_1513
+dispstr 'COMB_1514 START'#$0A
+call comb_1514
+dispstr 'COMB_1515 START'#$0A
+call comb_1515
+dispstr 'COMB_1516 START'#$0A
+call comb_1516
+dispstr 'COMB_1517 START'#$0A
+call comb_1517
+dispstr 'COMB_1518 START'#$0A
+call comb_1518
+dispstr 'COMB_1519 START'#$0A
+call comb_1519
+dispstr 'COMB_1520 START'#$0A
+call comb_1520
+dispstr 'COMB_1521 START'#$0A
+call comb_1521
+dispstr 'COMB_1522 START'#$0A
+call comb_1522
+dispstr 'COMB_1523 START'#$0A
+call comb_1523
+dispstr 'COMB_1524 START'#$0A
+call comb_1524
+dispstr 'COMB_1525 START'#$0A
+call comb_1525
+dispstr 'COMB_1526 START'#$0A
+call comb_1526
+dispstr 'COMB_1529 START'#$0A
+call comb_1529
+dispstr 'COMB_1530 START'#$0A
+call comb_1530
+dispstr 'COMB_1531 START'#$0A
+call comb_1531
+dispstr 'COMB_1532 START'#$0A
+call comb_1532
+
+;dispstr 'COMB_15_TEST SUCCESS'#$0A
+dispstr 'COMB_15_TEST SUCCESS Except_1503'#$0A
+closett
+
+end
+
+; +-------Sub routine ----------------------------------------+
+:comb_1503
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+
+messagebox  'Please reset 1250' 'Message'
+sendln 'lteapi pwron'
+wait '[API_NG] lte_power_control return val : "-5"' '[API_OK]'
+call check_fail
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+dispstr 'COMB_1503 SUCCESS'#$0A
+
+sendln 'lteapi fin'
+wait '[API_OK] lte_finalize return val : "0"' '[API_NG]'
+call check_fail
+
+return
+
+:comb_1504
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+
+
+sendln 'lteapi pwroff'
+wait '[API_NG] lte_power_control return val : "-120"' '[API_OK]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+dispstr 'COMB_1504 SUCCESS'#$0A
+
+sendln 'lteapi fin'
+wait '[API_OK] lte_finalize return val : "0"' '[API_NG]'
+call check_fail
+
+return
+
+:comb_1506
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_NG] lte_power_control return val : "-120"' '[API_OK]'
+call check_fail
+
+sendln 'lteapi pwroff'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwroff_cb result : "0"' '[CB_NG]'
+call check_fail
+
+dispstr 'COMB_1506 SUCCESS'#$0A
+
+sendln 'lteapi fin'
+wait '[API_OK] lte_finalize return val : "0"' '[API_NG]'
+call check_fail
+
+return
+
+:comb_1507
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi atchnet NULL'
+wait '[API_NG] lte_attach_network return val : "-22"' '[API_OK]'
+call check_fail
+
+sendln 'lteapi atchnet'
+wait '[API_OK] lte_attach_network return val : "0"' '[API_NG]'
+call check_fail
+
+pause 5
+
+dispstr 'COMB_1507 SUCCESS'#$0A
+
+sendln 'lteapi fin'
+wait '[API_OK] lte_finalize return val : "0"' '[API_NG]'
+call check_fail
+
+return
+
+:comb_1508
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi dtchnet NULL'
+wait '[API_NG] lte_detach_network return val : "-22"' '[API_OK]'
+call check_fail
+
+sendln 'lteapi dtchnet'
+wait '[API_OK] lte_detach_network return val : "0"' '[API_NG]'
+call check_fail
+
+pause 5
+
+dispstr 'COMB_1508 SUCCESS'#$0A
+
+sendln 'lteapi fin'
+wait '[API_OK] lte_finalize return val : "0"' '[API_NG]'
+call check_fail
+
+return
+
+:comb_1509
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi gtnetst NULL'
+wait '[API_NG] lte_get_netstat return val : "-22"' '[API_OK]'
+call check_fail
+
+sendln 'lteapi gtnetst'
+wait '[API_OK] lte_get_netstat return val : "0"' '[API_NG]'
+call check_fail
+
+pause 5
+
+dispstr 'COMB_1509 SUCCESS'#$0A
+
+sendln 'lteapi fin'
+wait '[API_OK] lte_finalize return val : "0"' '[API_NG]'
+call check_fail
+
+return
+
+:comb_1510
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+sendln 'lteapi dataon INVALID'
+wait '[API_NG] lte_data_on return val : "-22"' '[API_OK]'
+call check_fail
+
+sendln 'lteapi dataon 1'
+wait '[API_OK] lte_data_on return val : "0"' '[API_NG]'
+call check_fail
+
+pause 5
+
+dispstr 'COMB_1510 SUCCESS'#$0A
+
+sendln 'lteapi fin'
+wait '[API_OK] lte_finalize return val : "0"' '[API_NG]'
+call check_fail
+
+return
+
+:comb_1511
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi dataoff INVALID'
+wait '[API_NG] lte_data_off return val : "-22"' '[API_OK]'
+call check_fail
+
+sendln 'lteapi dataoff 1'
+wait '[API_OK] lte_data_off return val : "0"' '[API_NG]'
+call check_fail
+
+pause 5
+
+dispstr 'COMB_1511 SUCCESS'#$0A
+
+sendln 'lteapi fin'
+wait '[API_OK] lte_finalize return val : "0"' '[API_NG]'
+call check_fail
+
+return
+
+:comb_1512
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi gtdtst NULL'
+wait '[API_NG] lte_get_datastat return val : "-22"' '[API_OK]'
+call check_fail
+
+sendln 'lteapi gtdtst'
+wait '[API_OK] lte_get_datastat return val : "0"' '[API_NG]'
+call check_fail
+
+pause 5
+
+dispstr 'COMB_1512 SUCCESS'#$0A
+
+sendln 'lteapi fin'
+wait '[API_OK] lte_finalize return val : "0"' '[API_NG]'
+call check_fail
+
+return
+
+:comb_1513
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi gtdtcfg INVALID'
+wait '[API_NG] lte_get_dataconfig return val : "-22"' '[API_OK]'
+call check_fail
+
+sendln 'lteapi gtdtcfg LTE_DATA_TYPE_USER'
+wait '[API_OK] lte_get_dataconfig return val : "0"' '[API_NG]'
+call check_fail
+
+pause 5
+
+dispstr 'COMB_1513 SUCCESS'#$0A
+
+sendln 'lteapi fin'
+wait '[API_OK] lte_finalize return val : "0"' '[API_NG]'
+call check_fail
+
+return
+
+:comb_1514
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi stdtcfg INVALID LTE_ENABLE LTE_ENABLE'
+wait '[API_NG] lte_set_dataconfig return val : "-22"' '[API_OK]'
+call check_fail
+
+sendln 'lteapi stdtcfg LTE_DATA_TYPE_IMS LTE_ENABLE LTE_ENABLE'
+wait '[API_OK] lte_set_dataconfig return val : "0"' '[API_NG]'
+call check_fail
+
+pause 5
+
+dispstr 'COMB_1514 SUCCESS'#$0A
+
+sendln 'lteapi fin'
+wait '[API_OK] lte_finalize return val : "0"' '[API_NG]'
+call check_fail
+
+return
+
+:comb_1515
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi gtapnst NULL'
+wait '[API_NG] lte_get_apnset return val : "-22"' '[API_OK]'
+call check_fail
+
+
+sendln 'lteapi gtapnst'
+wait '[API_OK] lte_get_apnset return val : "0"' '[API_NG]'
+call check_fail
+
+pause 5
+
+dispstr 'COMB_1515 SUCCESS'#$0A
+
+sendln 'lteapi fin'
+wait '[API_OK] lte_finalize return val : "0"' '[API_NG]'
+call check_fail
+
+return
+
+:comb_1516
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+send 'lteapi stapn INVALID'
+send ' '
+send APNNAME
+send ' '
+send IP_TYPE
+send ' '
+send AUTH_TYPE
+send ' '
+send USERNAME
+send ' '
+sendln PASSWARD
+wait '[API_NG] lte_set_apn return val : "-22"' '[API_OK]'
+call check_fail
+
+send 'lteapi stapn '
+send SESSION_ID
+send ' '
+send APNNAME
+send ' '
+send IP_TYPE
+send ' '
+send AUTH_TYPE
+send ' '
+send USERNAME
+send ' '
+sendln PASSWARD
+wait '[API_OK] lte_set_apn return val : "0"' '[API_NG]'
+call check_fail
+
+pause 5
+
+dispstr 'COMB_1516 SUCCESS'#$0A
+
+sendln 'lteapi fin'
+wait '[API_OK] lte_finalize return val : "0"' '[API_NG]'
+call check_fail
+
+return
+
+:comb_1517
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi gtver NULL'
+wait '[API_NG] lte_get_version return val : "-22"' '[API_OK]'
+call check_fail
+
+sendln 'lteapi gtver'
+wait '[API_OK] lte_get_version return val : "0"' '[API_NG]'
+call check_fail
+
+pause 5
+
+dispstr 'COMB_1517 SUCCESS'#$0A
+
+sendln 'lteapi fin'
+wait '[API_OK] lte_finalize return val : "0"' '[API_NG]'
+call check_fail
+
+return
+
+:comb_1518
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi gtphno NULL'
+wait '[API_NG] lte_get_phoneno return val : "-22"' '[API_OK]'
+call check_fail
+
+sendln 'lteapi gtphno'
+wait '[API_OK] lte_get_phoneno return val : "0"' '[API_NG]'
+call check_fail
+
+pause 5
+
+dispstr 'COMB_1518 SUCCESS'#$0A
+
+sendln 'lteapi fin'
+wait '[API_OK] lte_finalize return val : "0"' '[API_NG]'
+call check_fail
+
+return
+
+:comb_1519
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi gtimsi NULL'
+wait '[API_NG] lte_get_imsi return val : "-22"' '[API_OK]'
+call check_fail
+
+sendln 'lteapi gtimsi'
+wait '[API_OK] lte_get_imsi return val : "0"' '[API_NG]'
+call check_fail
+
+pause 5
+
+dispstr 'COMB_1519 SUCCESS'#$0A
+
+sendln 'lteapi fin'
+wait '[API_OK] lte_finalize return val : "0"' '[API_NG]'
+call check_fail
+
+return
+
+:comb_1520
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi gtimei NULL'
+wait '[API_NG] lte_get_imei return val : "-22"' '[API_OK]'
+call check_fail
+
+sendln 'lteapi gtimei'
+wait '[API_OK] lte_get_imei return val : "0"' '[API_NG]'
+call check_fail
+
+pause 5
+
+dispstr 'COMB_1520 SUCCESS'#$0A
+
+sendln 'lteapi fin'
+wait '[API_OK] lte_finalize return val : "0"' '[API_NG]'
+call check_fail
+
+return
+
+:comb_1521
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi gtpinst NULL'
+wait '[API_NG] lte_get_pinset return val : "-22"' '[API_OK]'
+call check_fail
+
+sendln 'lteapi gtpinst'
+wait '[API_OK] lte_get_pinset return val : "0"' '[API_NG]'
+call check_fail
+
+pause 5
+
+dispstr 'COMB_1521 SUCCESS'#$0A
+
+sendln 'lteapi fin'
+wait '[API_OK] lte_finalize return val : "0"' '[API_NG]'
+call check_fail
+
+return
+
+:comb_1522
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi stpinenb LTE_PIN_ENABLE INVALID'
+wait '[API_NG] lte_set_pinenable return val : "-22"' '[API_OK]'
+call check_fail
+
+send 'lteapi stpinenb LTE_PIN_ENABLE '
+sendln DEFAULTPIN
+wait '[API_OK] lte_set_pinenable return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] stpnenbl_cb result : "0"' '[CB_NG]'
+call check_fail
+pause 5
+
+dispstr 'COMB_1522 SUCCESS'#$0A
+
+send 'lteapi stpinenb LTE_PIN_DISABLE '
+sendln DEFAULTPIN
+wait '[API_OK] lte_set_pinenable return val : "0"' '[API_NG]'
+call check_fail
+
+sendln 'lteapi fin'
+wait '[API_OK] lte_finalize return val : "0"' '[API_NG]'
+call check_fail
+
+return
+
+:comb_1523
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi cngpin INVALID 0000 1111'
+wait '[API_NG] lte_change_pin return val : "-22"' '[API_OK]'
+call check_fail
+
+sendln 'lteapi cngpin LTE_TARGET_PIN 0000 1111'
+wait '[API_OK] lte_change_pin return val : "0"' '[API_NG]'
+call check_fail
+
+pause 5
+
+dispstr 'COMB_1523 SUCCESS'#$0A
+
+sendln 'lteapi fin'
+wait '[API_OK] lte_finalize return val : "0"' '[API_NG]'
+call check_fail
+
+return
+
+:comb_1524
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi entpin NULL 0000'
+wait '[API_NG] lte_enter_pin return val : "-22"' '[APIOK]'
+call check_fail
+
+sendln 'lteapi entpin 0000 0000'
+wait '[API_OK] lte_enter_pin return val : "0"' '[API_NG]'
+call check_fail
+
+pause 5
+
+dispstr 'COMB_1524 SUCCESS'#$0A
+
+sendln 'lteapi fin'
+wait '[API_OK] lte_finalize return val : "0"' '[API_NG]'
+call check_fail
+
+return
+
+:comb_1525
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi gtlcltm NULL'
+wait '[API_NG] lte_get_localtime return val : "-22"' '[API_OK]'
+call check_fail
+
+sendln 'lteapi gtlcltm'
+wait '[API_OK] lte_get_localtime return val : "0"' '[API_NG]'
+call check_fail
+
+pause 5
+
+dispstr 'COMB_1525 SUCCESS'#$0A
+
+sendln 'lteapi fin'
+wait '[API_OK] lte_finalize return val : "0"' '[API_NG]'
+call check_fail
+
+return
+
+:comb_1526
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi gtoprtr NULL'
+wait '[API_NG] lte_get_operator return val : "-22"' '[API_OK]'
+call check_fail
+
+sendln 'lteapi gtoprtr'
+wait '[API_OK] lte_get_operator return val : "0"' '[API_NG]'
+call check_fail
+
+pause 5
+
+dispstr 'COMB_1526 SUCCESS'#$0A
+
+sendln 'lteapi fin'
+wait '[API_OK] lte_finalize return val : "0"' '[API_NG]'
+call check_fail
+
+return
+
+:comb_1529
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi gtedrx NULL'
+wait '[API_NG] lte_get_edrx return val : "-22"' '[API_OK]'
+call check_fail
+
+sendln 'lteapi gtedrx'
+wait '[API_OK] lte_get_edrx return val : "0"' '[API_NG]'
+call check_fail
+
+pause 5
+
+dispstr 'COMB_1529 SUCCESS'#$0A
+
+sendln 'lteapi fin'
+wait '[API_OK] lte_finalize return val : "0"' '[API_NG]'
+call check_fail
+
+return
+
+:comb_1530
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi stedrx LTE_ENABLE INVALID LTE_EDRX_PTW_256'
+wait '[API_NG] lte_set_edrx return val : "-22"' '[API_OK]'
+call check_fail
+
+sendln 'lteapi stedrx LTE_ENABLE LTE_EDRX_CYC_1024 LTE_EDRX_PTW_256'
+wait '[API_OK] lte_set_edrx return val : "0"' '[API_NG]'
+call check_fail
+
+pause 5
+
+dispstr 'COMB_1530 SUCCESS'#$0A
+
+sendln 'lteapi fin'
+wait '[API_OK] lte_finalize return val : "0"' '[API_NG]'
+call check_fail
+
+return
+
+:comb_1531
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi gtpsm NULL'
+wait '[API_NG] lte_get_psm return val : "-22"' '[API_OK]'
+call check_fail
+
+sendln 'lteapi gtpsm'
+wait '[API_OK] lte_get_psm return val : "0"' '[API_NG]'
+call check_fail
+
+pause 5
+
+dispstr 'COMB_1531 SUCCESS'#$0A
+
+sendln 'lteapi fin'
+wait '[API_OK] lte_finalize return val : "0"' '[API_NG]'
+call check_fail
+
+return
+
+:comb_1532
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi stpsm LTE_ENABLE INVALID 10 LTE_PSM_T3412_UNIT_30SEC 10'
+wait '[API_NG] lte_set_psm return val : "-22"' '[API_OK]'
+call check_fail
+
+sendln 'lteapi stpsm LTE_ENABLE LTE_PSM_T3324_UNIT_1MIN 10 LTE_PSM_T3412_UNIT_30SEC 10'
+wait '[API_OK] lte_set_psm return val : "0"' '[API_NG]'
+call check_fail
+
+pause 5
+
+dispstr 'COMB_1532 SUCCESS'#$0A
+
+sendln 'lteapi fin'
+wait '[API_OK] lte_finalize return val : "0"' '[API_NG]'
+call check_fail
+
+return
+
+:check_fail
+if result!=1 then
+    dispstr 'send finish command'#$0A
+    sendln 'lteapi fin'
+    dispstr 'COMB_15_TEST FAILURE'#$0A
+    sendln 'lteapi fin'
+    call error_output
+    closett
+    end
+endif
+return
+
+:error_output
+tz="GMT"
+getdate DEBUG_LOG_NAME '..\..\log\comb_15_%Y%m%d%H%M%S.error'
+fileopen file DEBUG_LOG_NAME 1
+if -1==file then
+    messagebox 'File open failed!!' 'Error'
+    goto exit
+endif
+
+filewriteln file 'THIS Test is ERROR. Please check the log.'
+
+return

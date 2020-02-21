@@ -1,0 +1,4 @@
+
+ifeq ($(CONFIG_TEST_ACA_UTIL),y)
+CONFIGURED_APPS += aca_util
+endif

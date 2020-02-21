@@ -1,0 +1,30 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config LTE_SOCKTEST_MACRO
+	bool "macro test"
+	default n
+	---help---
+		Enable the macro test
+
+if LTE_SOCKTEST_MACRO
+
+config LTE_SOCKTEST_MACRO_PROGNAME
+	string "Program name"
+	default "macrotest"
+	depends on BUILD_KERNEL
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config LTE_SOCKTEST_MACRO_PRIORITY
+	int "macrotest task priority"
+	default 100
+
+config LTE_SOCKTEST_MACRO_STACKSIZE
+	int "macrotest stack size"
+	default 2048
+
+endif

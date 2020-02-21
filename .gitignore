@@ -1,0 +1,14 @@
+/Kconfig
+.depend
+.built
+.context
+Make.dep
+/*.a
+*.o
+sqa/singlefunction/audio_recog/worker_recognizer/RCGPROC
+sqa/singlefunction/audio_recog/worker_recognizer/lib/libasmpw.a
+sqa/singlefunction/audio_recog2/worker_recognizer/RCGPROC
+sqa/singlefunction/audio_recog2/worker_recognizer2/RCGPROC2
+sqa/singlefunction/security1-4/worker/sectest1-4/sectest
+sqa/singlefunction/security1-4/worker/sectest1-4/sectest.map
+

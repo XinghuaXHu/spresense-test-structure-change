@@ -1,0 +1,82 @@
+#====================================================================#
+# 
+#       File Name: Makefile
+#       
+#       Description: 
+#           This is Makefile on codec library.
+# 
+#       Notes: (C) Copyright 2014 Sony Corporation
+# 
+#       Author: Tetsuya Sakai
+# 
+#====================================================================#
+#--------------------------------------------------------------------#
+# Configuration File Definition
+#--------------------------------------------------------------------#
+TOP_DIR		= ..
+
+BASE_CONFIG	= $(TOP_DIR)/Config/base_config.mk
+
+#------------------------------------------------#
+# These files must do include first.
+# Do in order of BASE_CONFIG, MAKE_CONFIG, and PATHS.
+#------------------------------------------------#
+include $(BASE_CONFIG)
+include $(MAKE_CONFIG)
+include $(PATHS)
+
+#------------------------------------------------#
+# Library Name
+#------------------------------------------------#
+LIB_NAME	= lib$(USER_LIB).a
+
+#------------------------------------------------#
+# etc.
+#------------------------------------------------#
+MAKEFILE	= Makefile
+
+#------------------------------------------------#
+# File name
+#------------------------------------------------#
+OBJS    	=
+
+SRCS		= $(addprefix ./, $(OBJS:.o=.c))
+
+#------------------------------------------------#
+# VPATH Set
+#------------------------------------------------#
+VPATH		=	../src
+
+#------------------------------------------------#
+# Command Option
+#------------------------------------------------#
+CFLAGS		= $(DEFS) $(COPT) $(DOPT) \
+		  -I$(INC_TEST_COMMON_DIR) \
+
+CXXFLAGS	= $(DEFS) $(CXXOPT) $(DOPT) \
+		  -I$(INC_TEST_COMMON_DIR)
+
+#------------------------------------------------#
+# Make Target
+#------------------------------------------------#
+all:$(LIB_NAME)
+
+$(LIB_NAME): $(OBJS) $(MAKEFILE)
+	$(AR) $(ARFLAGS) $(LIB_NAME) $(OBJS)
+
+clean allclean subclean:
+	$(RM) $(OBJS) $(LIB_NAME)
+	$(RM) .depend
+
+.depend:  \
+	 $(SRCS) $(MAKE_CONFIG) $(MAKEFILE)
+	$(CC) $(CFLAGS) -M $(SRCS) > $@
+
+#--------------------------------------------------------------------#
+# Do the include of these files at the last.
+#--------------------------------------------------------------------#
+include $(RULES)
+ifneq ($(findstring clean,$(MAKECMDGOALS)),clean)
+include .depend
+endif
+

@@ -1,0 +1,63 @@
+
+
+
+setdebug 0
+setsync 1
+
+timeout=40
+
+pause 2
+
+dispstr 'TEST START (uninit)'#$0A
+
+sendln 'lteapi setrestart'
+wait '[API_OK]' '[API_NG]'
+sendln 'lteapi poweron'
+wait '[API_OK]' '[API_NG]'
+wait '[CB_VAL]'
+if 1!=result then
+    dispstr 'CB Timeout'#$0A
+endif
+sendln 'lteapi poweroff'
+wait '[API_OK]' '[API_NG]'
+sendln 'lteapi repnetinfo'
+wait '[API_OK]' '[API_NG]'
+sendln 'lteapi radioon'
+wait '[API_OK]' '[API_NG]'
+sendln 'lteapi radiooff'
+wait '[API_OK]' '[API_NG]'
+sendln 'lteapi getimscap'
+wait '[API_OK]' '[API_NG]'
+sendln 'lteapi getnetinfo'
+wait '[API_OK]' '[API_NG]'
+wait '[CB_VAL]'
+if 1!=result then
+    dispstr 'CB Timeout'#$0A
+endif
+sendln 'lteapi actpdn teasapn 514 0 2 usr1 pwd'
+wait '[API_OK]' '[API_NG]'
+wait '[CB_VAL]'
+if 1!=result then
+    dispstr 'CB Timeout'#$0A
+endif
+
+sendln 'lteapi dataallow 1 0 0'
+wait '[API_OK]' '[API_NG]'
+wait '[CB_VAL]'
+if 1!=result then
+    dispstr 'CB Timeout'#$0A
+endif
+
+sendln 'lteapi deactpdn 1'
+wait '[API_OK]' '[API_NG]'
+wait '[CB_VAL]'
+if 1!=result then
+    dispstr 'CB Timeout'#$0A
+endif
+
+dispstr 'TEST FIN (uninit)'#$0A
+
+sendln 'lteapi fin'
+wait '[API_OK]'
+
+end

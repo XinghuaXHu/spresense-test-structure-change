@@ -1,0 +1,71 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config TEST_WEBSOCKET
+	bool "WebSocket test"
+	default n
+	select EXTERNALS_WEBSOCKET
+	---help---
+		Enable the websocket test
+
+if TEST_WEBSOCKET
+
+config TEST_WEBSOCKET_PROGNAME
+	string "Program name"
+	default "websocket"
+	depends on BUILD_KERNEL
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config TEST_WEBSOCKET_PRIORITY
+	int "websocket test task priority"
+	default 100
+
+config TEST_WEBSOCKET_STACKSIZE
+	int "websocket test stack size"
+	default 8192
+
+config TEST_WEBSOCKET_STACKSIZE_IN_USING_MBEDTLS
+	int "lte_websocket stack size in using mbedTLS"
+	default 11264
+
+config TEST_WEBSOCKET_APN_NAME
+	string "Access Point Name"
+	default ""
+
+config TEST_WEBSOCKET_APN_IPTYPE
+	int "IP type"
+	default 0
+	range 0 2
+	---help---
+		IP type is selected from IP, IPv6 and IPv4/v6.
+		Values are IP=0, IPv6=1 and IPv4/v6=2.
+
+config TEST_WEBSOCKET_APN_AUTHTYPE
+	int "Authentication type"
+	default 0
+	range 0 2
+	---help---
+		Authentication type is selected from NONE, PAP and CHAP.
+		Values are NONE=0, PAP=1, CHAP=2.
+
+config TEST_WEBSOCKET_APN_USERNAME
+	string "Username used for authentication"
+	default ""
+
+config TEST_WEBSOCKET_APN_PASSWD
+	string "Password used for authentication"
+	default ""
+
+config TEST_WEBSOCKET_ROOTCA_ECHO
+	string "Echo protocol server root CA file name"
+	default "/mnt/vfat/gd-class2-root.crt"
+
+config TEST_WEBSOCKET_ROOTCA_CHAT
+	string "Chat protocol server root CA file name"
+	default "/mnt/vfat/DigiCertHighAssuaranceEVRootCA.crt"
+
+endif

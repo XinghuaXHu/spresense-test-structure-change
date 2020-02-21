@@ -1,0 +1,47 @@
+<20-02-20 10:50:19> INFO     SAVING LOGS IN: ../../../logs/-audio_recorder_hi_test/log_2020-02-20_10h48m01s/tc_player_16258_recorder_16306.txt
+<20-02-20 10:50:19> INFO     ------------------------- tc_player_16258_recorder_16306 STARTED -------------------------
+<20-02-20 10:50:19> DEBUG    SET_TIMEOUT: For tc_player_16258_recorder_16306 (1800 s)
+<20-02-20 10:50:19> DEBUG    > PHASE: SETUP
+<20-02-20 10:50:19> DEBUG    [PLAYER_DEVICE] EVENT SENT: reboot
+<20-02-20 10:50:20> DEBUG    [PLAYER_DEVICE] EVENT RECEIVED: [NUTTSHELL] {}
+<20-02-20 10:50:20> DEBUG    [PLAYER_DEVICE] EXECUTE: add_monitor
+<20-02-20 10:50:20> DEBUG    [PLAYER_DEVICE] EXECUTE: add_monitor
+<20-02-20 10:50:20> DEBUG    [PLAYER_DEVICE] EXECUTE: add_monitor
+<20-02-20 10:50:20> DEBUG    [PLAYER_DEVICE] EVENT SENT: cd /mnt
+<20-02-20 10:50:20> DEBUG    [PLAYER_DEVICE] EVENT SENT: ls
+<20-02-20 10:50:20> DEBUG    [PLAYER_DEVICE] EXECUTE: start_timer
+<20-02-20 10:50:20> DEBUG    [PLAYER_DEVICE] EVENT RECEIVED: [NSH_PROMPT] {'Command': 'cd /mnt'}
+<20-02-20 10:50:20> DEBUG    [PLAYER_DEVICE] EVENT RECEIVED: [NSH_PROMPT] {'Command': 'No command'}
+<20-02-20 10:50:20> DEBUG    [PLAYER_DEVICE] EVENT RECEIVED: [NSH_LS] {'ls': {'path': '/mnt/', 'files': [], 'dirs': ['spif']}}
+<20-02-20 10:50:20> DEBUG    [RECORDER_DEVICE] EVENT RECEIVED: [NUTTSHELL] {}
+<20-02-20 10:50:21> DEBUG    [PLAYER_DEVICE] EVENT RECEIVED: [NSH_PROMPT] {'Command': 'No command'}
+<20-02-20 10:50:21> DEBUG    [RECORDER_DEVICE] EVENT RECEIVED: [NSH_PROMPT] {'Command': 'No command'}
+<20-02-20 10:50:22> DEBUG    [PLAYER_DEVICE] EVENT SENT: ls
+<20-02-20 10:50:22> DEBUG    [PLAYER_DEVICE] EVENT RECEIVED: [NSH_LS] {'ls': {'path': '/mnt/', 'files': [], 'dirs': ['sd0', 'spif']}}
+<20-02-20 10:50:23> DEBUG    [PLAYER_DEVICE] EVENT RECEIVED: [NSH_PROMPT] {'Command': 'No command'}
+<20-02-20 10:50:24> DEBUG    [PLAYER_DEVICE] EVENT SENT: ls
+<20-02-20 10:50:24> DEBUG    [PLAYER_DEVICE] EVENT RECEIVED: SD card mounted
+<20-02-20 10:50:24> DEBUG    [PLAYER_DEVICE] EXECUTE: remove_monitor
+<20-02-20 10:50:24> DEBUG    [PLAYER_DEVICE] EXECUTE: <lambda>
+<20-02-20 10:50:24> INFO     
+<20-02-20 10:50:24> INFO     ############################################################
+<20-02-20 10:50:24> INFO     ## [5sec] wait sd
+<20-02-20 10:50:24> INFO     ############################################################
+<20-02-20 10:50:24> INFO     
+<20-02-20 10:50:24> DEBUG    [PLAYER_DEVICE] EVENT RECEIVED: [NSH_LS] {'ls': {'path': '/mnt/', 'files': [], 'dirs': ['sd0', 'spif']}}
+<20-02-20 10:50:25> DEBUG    [PLAYER_DEVICE] EVENT RECEIVED: [NSH_PROMPT] {'Command': 'No command'}
+<20-02-20 10:50:29> DEBUG    [PLAYER_DEVICE] EVENT RECEIVED: wait sec completed
+<20-02-20 10:50:29> DEBUG    [PLAYER_DEVICE] EXECUTE: <lambda>
+<20-02-20 10:50:29> DEBUG    [PLAYER_DEVICE] EVENT SENT: umount /mnt/sd0
+<20-02-20 10:50:29> DEBUG    [PLAYER_DEVICE] EVENT RECEIVED: umount /mnt/sd0
+<20-02-20 10:50:29> DEBUG    [PLAYER_DEVICE] EVENT RECEIVED: [NSH_PROMPT] {'Command': 'No command'}
+<20-02-20 10:50:30> DEBUG    [PLAYER_DEVICE] EVENT SENT: msconn
+<20-02-20 10:50:30> DEBUG    [PLAYER_DEVICE] EVENT RECEIVED: [NSH_PROMPT] {'Command': 'No command'}
+<20-02-20 10:50:30> DEBUG    [PLAYER_DEVICE] EVENT RECEIVED: msconn
+<20-02-20 10:50:30> DEBUG    [PLAYER_DEVICE] EVENT RECEIVED: mcsonn_main: Creating block drivers
+<20-02-20 10:50:30> DEBUG    [PLAYER_DEVICE] EVENT RECEIVED: mcsonn_main: Configuring with NLUNS=1
+<20-02-20 10:50:30> DEBUG    [PLAYER_DEVICE] EVENT RECEIVED: mcsonn_main: handle=d0792c0
+<20-02-20 10:50:30> DEBUG    [PLAYER_DEVICE] EVENT RECEIVED: mcsonn_main: Bind LUN=0 to /dev/mmcsd0
+<20-02-20 10:50:30> DEBUG    [PLAYER_DEVICE] EVENT RECEIVED: mcsonn_main: Connected
+<20-02-20 10:50:30> DEBUG    [PLAYER_DEVICE] EVENT RECEIVED: [NSH_PROMPT] {'Command': 'No command'}
+<20-02-20 10:50:31> DEBUG    [PLAYER_DEVICE] EVENT RECEIVED: [NSH_PROMPT] {'Command': 'No command'}

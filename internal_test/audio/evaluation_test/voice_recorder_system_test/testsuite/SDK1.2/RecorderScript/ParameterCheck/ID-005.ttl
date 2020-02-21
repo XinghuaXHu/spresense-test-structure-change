@@ -1,0 +1,4 @@
+sendln '#####  Parameter check ID-005  #####'
+sendln "voice_recorder SetRecParam 2"
+sendln "voice_recorder SetRecorderMode -1"
+sendln '#####   End   #####'

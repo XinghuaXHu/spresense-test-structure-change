@@ -1,0 +1,8 @@
+sendln '#####  Codec change ID-001  #####'
+sendln "voice_recorder SetRecParam 2"
+sendln "voice_recorder SetRecorderMode"
+sendln "dbg level AS I"
+sendln "voice_recorder StartRec"
+pause 10
+sendln "voice_recorder StopRec"
+sendln '#####   End   #####'

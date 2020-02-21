@@ -1,0 +1,16 @@
+
+1.Folder autotest_sd_picture:
+  save the pictures of all camera autotest case, for python script camera_test_check_tc_runner.py and usbmsc.py
+
+  usbmsc.py function is copy sd card pictures to autotest_sd_picture folder 
+  camera_test_check_tc_runner.py is check the autotest_sd_picture folder pictures 
+
+2. Folder pc_autotest:
+   backup Folder, save the all pictures and folder of folder autotest(window tool link folder)
+
+
+3. script cleantestpictureandlogfile.py:
+   if autotest folder have pictures and log file need to delet,can use this script.
+
+4. script creatgodandlog.py
+   creat god picture and log folder in autotest folder 

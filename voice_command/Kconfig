@@ -1,0 +1,30 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config TEST_VOICE_COMMAND
+    bool "Audio voice command test"
+    default n
+    ---help---
+        Enable voice command test
+
+if TEST_VOICE_COMMAND
+
+config TEST_VOICE_COMMAND_APP_NAME
+	string "Application name"
+	default "voice_command"
+	
+config TEST_VOICE_COMMAND_PROGNAME
+	string "Program name"
+	default "voice_command"
+	
+config TEST_VOICE_COMMAND_PRIORITY
+	int "voice_command task priority"
+	default 100
+
+config TEST_VOICE_COMMAND_STACKSIZE
+	int "voice_command stack size"
+	default 2048
+
+endif

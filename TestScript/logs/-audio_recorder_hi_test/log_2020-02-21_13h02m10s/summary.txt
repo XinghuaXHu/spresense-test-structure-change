@@ -1,0 +1,5 @@
+<20-02-21 13:02:10> INFO     SAVING LOGS IN: ../../../logs/-audio_recorder_hi_test/log_2020-02-21_13h02m10s/summary.txt
+<20-02-21 13:02:10> INFO     --------------------------- AudioRecorderHiTestTcRunner SETUP ----------------------------
+<20-02-21 13:02:10> INFO     Building project sources
+<20-02-21 13:02:10> INFO     Building PLAYER_DEVICE
+<20-02-21 13:02:10> INFO     -------------------------- AudioRecorderHiTestTcRunner TEARDOWN --------------------------

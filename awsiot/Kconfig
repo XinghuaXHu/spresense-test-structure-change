@@ -1,0 +1,90 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config TEST_AWSIOT
+	bool "AWS IoT test"
+	default n
+	---help---
+		Enable the AWS IoT test
+
+if TEST_AWSIOT
+
+config TEST_AWSIOT_PROGNAME
+	string "Program name"
+	default "awsiot"
+	depends on BUILD_KERNEL
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config TEST_AWSIOT_PRIORITY
+	int "awsiottest task priority"
+	default 100
+
+config TEST_AWSIOT_STACKSIZE
+	int "awsiottest stack size"
+	default 2048
+
+config TEST_AWSIOT_STACKSIZE_IN_USING_MBEDTLS
+	int "lte_awsiot stack size in using mbedTLS"
+	default 5120
+
+config TEST_AWSIOT_IOT_DEBUG
+	bool "enables IOT_DEBUG output"
+	default n
+
+config TEST_AWSIOT_IOT_ERROR
+	bool "enables IOT_ERROR output"
+	default n
+
+config TEST_AWSIOT_APN_NAME
+	string "Access Point Name"
+	default ""
+
+config TEST_AWSIOT_APN_IPTYPE
+	int "IP type"
+	default 0
+	range 0 2
+	---help---
+		IP type is selected from IP, IPv6 and IPv4/v6.
+		Values are IP=0, IPv6=1 and IPv4/v6=2.
+
+config TEST_AWSIOT_APN_AUTHTYPE
+	int "Authentication type"
+	default 0
+	range 0 2
+	---help---
+		Authentication type is selected from NONE, PAP and CHAP.
+		Values are NONE=0, PAP=1, CHAP=2.
+
+config TEST_AWSIOT_APN_USERNAME
+	string "Username used for authentication"
+	default ""
+
+config TEST_AWSIOT_APN_PASSWD
+	string "Password used for authentication"
+	default ""
+
+config TEST_AWSIOT_HOST
+	string "AWS IoT server host name"
+	default "sample.iot.ap-northeast-1.amazonaws.com"
+
+config TEST_AWSIOT_PORT
+	int "AWS IoT server port number"
+	default 8883
+
+config TEST_AWSIOT_ROOTCA
+	string "AWS IoT server root CA file name"
+	default "/mnt/vfat/VeriSignClass3-G5.pem"
+
+config TEST_AWSIOT_CLIENT_CERT
+	string "AWS IoT client cert file"
+	default "/mnt/vfat/client_aws.crt"
+
+config TEST_AWSIOT_CLIENT_KEY
+	string "AWS IoT client key file"
+	default "/mnt/vfat/client_aws.key"
+
+endif

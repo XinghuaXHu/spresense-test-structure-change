@@ -1,0 +1,2 @@
+sendln "player SetInputDevice 255"
+sendln "player SetPlayerMode"

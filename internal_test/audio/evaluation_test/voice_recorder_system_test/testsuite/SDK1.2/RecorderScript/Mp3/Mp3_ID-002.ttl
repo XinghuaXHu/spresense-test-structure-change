@@ -1,0 +1,10 @@
+sendln '#####  MP3 eMMC ID-002  #####'
+sendln "voice_recorder SetRecParam 2"
+sendln "voice_recorder SetRecorderMode"
+sendln "voice_recorder InitRecorder 48000 2 16 MP3"
+sendln "dbg level AS I"
+sendln "voice_recorder StartRec"
+pause 7
+sendln "voice_recorder StopRec"
+sendln "voice_recorder SetReadyStatus"
+sendln '#####   End   #####'

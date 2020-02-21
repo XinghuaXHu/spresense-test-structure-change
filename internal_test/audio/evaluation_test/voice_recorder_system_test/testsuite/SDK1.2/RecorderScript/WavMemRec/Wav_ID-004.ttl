@@ -1,0 +1,15 @@
+sendln '#####  WAV RAM ID-004  #####'
+sendln "voice_recorder SetRecorderMode 0"
+sendln "voice_recorder InitRecorder 16000 2 16 WAV"
+sendln "dbg level AS I"
+sendln "voice_recorder StartRec"
+pause 10
+sendln "voice_recorder StopRec"
+sendln "voice_recorder SetReadyStatus"
+sendln "voice_recorder SetRecorderMode 1"
+sendln "voice_recorder InitRecorder 16000 2 16 WAV"
+sendln "voice_recorder StartRec"
+pause 10
+sendln "voice_recorder StopRec"
+sendln "voice_recorder SetReadyStatus"
+sendln '#####   End   #####'

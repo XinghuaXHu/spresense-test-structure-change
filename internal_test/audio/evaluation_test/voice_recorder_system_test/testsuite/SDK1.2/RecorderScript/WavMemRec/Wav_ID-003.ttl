@@ -1,0 +1,10 @@
+sendln '#####  WAV Play-Stop ID-003  #####'
+sendln "voice_recorder SetRecParam 4"
+sendln "voice_recorder SetRecorderMode 1"
+sendln "voice_recorder InitRecorder 16000 4 16 WAV"
+sendln "dbg level AS I"
+sendln "voice_recorder StartRec"
+pause 10
+sendln "voice_recorder StopRec"
+sendln "voice_recorder SetReadyStatus"
+sendln '#####   End   #####'

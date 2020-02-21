@@ -1,0 +1,47 @@
+sendln '#####  ID-042_045  #####'
+sendln "player SetPlayerMode"
+sendln "dbg level AS I"
+sendln "player PlayMusic"
+pause 2
+sendln '#####   IncVol 1   #####'
+sendln "player IncVol"
+sendln '#####   IncVol 2   #####'
+sendln "player IncVol"
+sendln '#####   DecVol 1   #####'
+sendln "player DecVol"
+sendln '#####   DecVol 2   #####'
+sendln "player DecVol"
+pause 2
+sendln "player StopMusic"
+sendln "player SetReadyStatus"
+sendln '#####  ID-046_049  #####'
+sendln "player SetPlayerMode"
+sendln "player PlayMusic"
+pause 2
+sendln '#####   DecVol 1   #####'
+sendln "player DecVol"
+sendln '#####   DecVol 2   #####'
+sendln "player DecVol"
+sendln '#####   IncVol 1   #####'
+sendln "player IncVol"
+sendln '#####   IncVol 2   #####'
+sendln "player IncVol"
+pause 2
+sendln "player StopMusic"
+sendln "player SetReadyStatus"
+sendln '#####  ID-050_531  #####'
+sendln "player SetPlayerMode"
+sendln "player PlayMusic"
+pause 2
+sendln '#####   IncVol 1‰ñ   #####'
+sendln "player IncVol"
+sendln '#####   DecVol 1‰ñ   #####'
+sendln "player DecVol"
+sendln '#####   IncVol 2‰ñ   #####'
+sendln "player IncVol"
+sendln '#####   DecVol 2‰ñ   #####'
+sendln "player DecVol"
+pause 2
+sendln "player StopMusic"
+sendln "player SetReadyStatus"
+endln '#####   End   #####'

@@ -1,0 +1,30 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config LTE_SOCKTEST_DNS
+	bool "dns test"
+	default n
+	---help---
+		Enable the dns test
+
+if LTE_SOCKTEST_DNS
+
+config LTE_SOCKTEST_DNS_PROGNAME
+	string "Program name"
+	default "dnstest"
+	depends on BUILD_KERNEL
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config LTE_SOCKTEST_DNS_PRIORITY
+	int "dnstest task priority"
+	default 100
+
+config LTE_SOCKTEST_DNS_STACKSIZE
+	int "dnstest stack size"
+	default 2048
+
+endif

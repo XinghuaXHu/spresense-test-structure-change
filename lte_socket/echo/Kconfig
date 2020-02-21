@@ -1,0 +1,30 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config LTE_SOCKTEST_ECHO
+	bool "echo test"
+	default n
+	---help---
+		Enable the echo test
+
+if LTE_SOCKTEST_ECHO
+
+config LTE_SOCKTEST_ECHO_PROGNAME
+	string "Program name"
+	default "echotest"
+	depends on BUILD_KERNEL
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config LTE_SOCKTEST_ECHO_PRIORITY
+	int "echotest task priority"
+	default 100
+
+config LTE_SOCKTEST_ECHO_STACKSIZE
+	int "echotest stack size"
+	default 2048
+
+endif

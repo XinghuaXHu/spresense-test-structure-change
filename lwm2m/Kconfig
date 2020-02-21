@@ -1,0 +1,82 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config TEST_LWM2M
+	bool "Lightweight M2M test"
+	default n
+	---help---
+		Enable the Lightweight M2M test
+
+if TEST_LWM2M
+
+config TEST_LWM2M_PROGNAME
+	string "Program name"
+	default "lwm2m"
+	depends on BUILD_KERNEL
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config TEST_LWM2M_PRIORITY
+	int "lwm2m test task priority"
+	default 100
+
+config TEST_LWM2M_STACKSIZE
+	int "lwm2m test stack size"
+	default 8192
+
+config TEST_LWM2M_APN_NAME
+	string "Access Point Name"
+	default ""
+
+config TEST_LWM2M_APN_IPTYPE
+	int "IP type"
+	default 0
+	range 0 2
+	---help---
+		IP type is selected from IP, IPv6 and IPv4/v6.
+		Values are IP=0, IPv6=1 and IPv4/v6=2.
+
+config TEST_LWM2M_APN_AUTHTYPE
+	int "Authentication type"
+	default 0
+	range 0 2
+	---help---
+		Authentication type is selected from NONE, PAP and CHAP.
+		Values are NONE=0, PAP=1, CHAP=2.
+
+config TEST_LWM2M_APN_USERNAME
+	string "Username used for authentication"
+	default ""
+
+config TEST_LWM2M_APN_PASSWD
+	string "Password used for authentication"
+	default ""
+
+config TEST_LWM2M_CLIENT_NAME
+	string "Client name of LwM2M"
+	default "testfw-lwm2m"
+
+config TEST_LWM2M_CLIENT_PORT
+	string "Client port of LwM2M"
+	default "56830"
+
+config TEST_LWM2M_SERVER_HOST
+	string "Server host name of LwM2M"
+	default "sample.ap-northeast-1.compute.amazonaws.com"
+
+config TEST_LWM2M_SERVER_PORT
+	string "Server port number of LwM2M"
+	default "5683"
+
+config TEST_LWM2M_LESHAN_IDENTITY
+	string "Identify of leshan server"
+	default "test-identity"
+
+config TEST_LWM2M_LESHAN_PSK
+	string "PSK of leshan server"
+	default "5350524553454e5345"
+
+endif

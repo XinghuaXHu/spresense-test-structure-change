@@ -1,0 +1,24 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;
+; sample test script for mfe_communicate_system_test
+;;;;;;;;;;;;;;;;;;;;;;;;;
+sendln "dbg level AS I"
+pause 2
+; Repeat 2 times.
+i = 2
+do while i>0
+	sendln "mfe InitBB"
+	sendln "mfe SetActive"
+	sendln "mfe InitMFE"
+	sendln "mfe InitMPP"
+	sendln "mfe StartBB"
+	sendln "mfe SetVolume"
+	sendln "mfe SetMpp"
+	pause 10
+	sendln "mfe StopBB"
+	sendln "mfe StartBB"
+	sendln "mfe SetVolume"
+	pause 10
+	sendln "mfe StopBB"
+	sendln "mfe SetReady"
+	i = i - 1
+loop

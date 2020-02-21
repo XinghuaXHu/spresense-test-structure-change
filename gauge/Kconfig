@@ -1,0 +1,30 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config TEST_GAUGE
+	bool "Gauge driver test"
+	default n
+	---help---
+		Enable the battery gauge driver test
+
+if TEST_GAUGE
+
+config TEST_GAUGE_PROGNAME
+	string "Program name"
+	default "gauge"
+	depends on BUILD_KERNEL
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config TEST_GAUGE_PRIORITY
+	int "Gauge task priority"
+	default 100
+
+config TEST_GAUGE_STACKSIZE
+	int "Gauge stack size"
+	default 2048
+
+endif

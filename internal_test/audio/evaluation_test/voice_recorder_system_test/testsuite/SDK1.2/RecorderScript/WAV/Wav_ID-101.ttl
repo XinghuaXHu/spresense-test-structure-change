@@ -1,0 +1,18 @@
+sendln '#####  WAV eMMC ID-101  #####'
+sendln "voice_recorder SetRecParam 4"
+sendln "voice_recorder SetRecorderMode"
+sendln "voice_recorder InitRecorder 16000 4 16 WAV"
+sendln "dbg level AS I"
+sendln "voice_recorder StartRec"
+pause 7
+sendln "voice_recorder StopRec"
+sendln "voice_recorder InitRecorder 48000 4 16 WAV"
+sendln "voice_recorder StartRec"
+pause 7
+sendln "voice_recorder StopRec"
+sendln "voice_recorder InitRecorder 16000 4 16 WAV"
+sendln "voice_recorder StartRec"
+pause 7
+sendln "voice_recorder StopRec"
+sendln "voice_recorder SetReadyStatus"
+sendln '#####   End   #####'

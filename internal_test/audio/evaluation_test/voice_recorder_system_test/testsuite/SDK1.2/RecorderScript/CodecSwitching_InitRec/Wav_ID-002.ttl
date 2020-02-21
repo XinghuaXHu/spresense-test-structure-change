@@ -1,0 +1,7 @@
+sendln '#####  Codec changep ID-002  #####'
+sendln "voice_recorder InitRecorder 16000 2 16 WAV"
+sendln "dbg level AS I"
+sendln "voice_recorder StartRec"
+pause 10
+sendln "voice_recorder StopRec"
+sendln '#####   End   #####'

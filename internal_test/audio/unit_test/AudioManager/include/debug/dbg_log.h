@@ -1,0 +1,5 @@
+#define DBG_LOGF_FATAL(...)
+#define DBG_LOGF_DEBUG(...)
+#define DBG_LOGF_INFO(...)
+#define DBG_LOGF_ERROR(...)
+#define DBG_LOG_DEBUG(...)

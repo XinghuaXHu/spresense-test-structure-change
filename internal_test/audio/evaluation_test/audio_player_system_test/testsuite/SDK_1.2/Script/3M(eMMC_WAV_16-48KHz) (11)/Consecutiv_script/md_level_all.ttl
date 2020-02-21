@@ -1,0 +1,36 @@
+sendln '#####  ID-130_133  #####'
+sendln "player SetPlayerMode"
+sendln "dbg level AS I"
+for i 1 3
+ int2str cnt i
+ sendln '#####  Play-Stop 'cnt'‰ñ  #####'
+ sendln "player PlayMusic"
+ pause 5
+ sendln "player StopMusic"
+next
+sendln "player SetReadyStatus"
+sendln '#####  ID-134_137  #####'
+sendln "player SetPlayerMode"
+sendln "player PlayMusic"
+pause 2
+for i 1 4
+ int2str cnt i
+ sendln '#####  IncVol 'cnt'   #####'
+ sendln "player IncVol"
+next
+pause 2
+sendln "player StopMusic"
+sendln "player SetReadyStatus"
+sendln '#####  ID-138_141  #####'
+sendln "player SetPlayerMode"
+sendln "player PlayMusic"
+pause 2
+for i 1 4
+ int2str cnt i
+ sendln '#####  DecVol 'cnt'  #####'
+ sendln "player DecVol"
+next
+pause 2
+sendln "player StopMusic"
+sendln "player SetReadyStatus"
+endln '#####   End   #####'

@@ -1,0 +1,31 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config TEST_LTEAPI
+	bool "LTEAPI test"
+
+	default n
+	---help---
+		Enable the lteapi test
+
+if TEST_LTEAPI
+
+config TEST_LTEAPI_PROGNAME
+	string "Program name"
+	default "lteapi"
+
+config TEST_LTEAPI_PRIORITY
+	int "LTEAPI test task priority"
+	default 100
+
+config TEST_LTEAPI_STACKSIZE
+	int "LTEAPI test stack size"
+	default 2048
+
+config TEST_LTEAPI_ENABLE_OLDAPI
+    bool "LTE old API enable"
+    default n
+
+endif

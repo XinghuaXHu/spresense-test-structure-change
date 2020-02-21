@@ -1,0 +1,192 @@
+; +------- Configurable variable ------------------------------+
+
+; +------------------------------------------------------------+
+
+include '..\comport.ttl'
+
+; +------- Variable -------------------------------------------+
+
+
+; +------- Batch Config----------------------------------------+
+
+;; ②ログファイル名の設定（ログフィルのフルパス）
+;;;; ②−１、保存パスを取得
+getdir DIR
+dirname FULLPATH DIR
+;;;; ②−２、ログファイル名を指定
+getdate LOG_NAME '..\..\log\COMB_06_%Y%m%d%H%M%S.log'
+;;;; ②−３、フルパス完成（合体）
+strconcat FULLPATH LOG_NAME
+ 
+;; ③port接続コマンド作成
+COMMAND = '/C=' 
+strconcat COMMAND COM_PORT 
+strconcat COMMAND ' /BAUD=' 
+strconcat COMMAND BAUDRATE
+ 
+;; ④サーバ接続
+connect COMMAND
+
+logclose
+logopen FULLPATH 0 1 0 1
+
+; +------- Main routine ---------------------------------------+
+setdebug 0
+setsync 1
+
+timeout=60
+
+pause 2
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+sendln 'lteapi setrestart'
+wait '[API_OK]' '[API_NG]'
+
+sendln 'lteapi poweron'
+wait '[API_OK]' '[API_NG]'
+call check_fail
+
+wait '[CB_VAL] restart_cb reason : "0"' '[CB_VAL] restart_cb reason : "1"'
+call check_fail
+
+dispstr 'COMB_6_1 START'#$0A
+dispstr 'CB_5_3 START'#$0A
+
+sendln 'lteapi radioon'
+wait '[API_OK]' '[API_NG]'
+call check_fail
+wait '[CB_VAL]'
+if 1!=result then
+    dispstr 'CB Timeout'#$0A
+endif
+sendln 'lteapi actpdn testapn 514 0 2 usr1 pwd'
+wait '[API_OK]' '[API_NG]'
+call check_fail
+
+sendln 'lteapi radiooff'
+wait '[API_OK]' '[API_NG]'
+call check_fail
+
+wait '[CB_VAL] refact_actpdn_cb result : "2"' '[CB_VAL] refact_actpdn_cb result : "0"'
+if result=0 then
+    dispstr 'send finish command'#$0A
+    sendln 'lteapi fin'
+    dispstr 'Comb06TEST FAILURE'#$0A
+    call error_output
+    closett
+    end
+endif
+
+dispstr 'COMB_6_1 SUCCESS'#$0A
+dispstr 'CB_5_3 SUCCESS'#$0A
+dispstr 'COMB_6_2 START'#$0A
+
+pause 60
+
+sendln 'lteapi getnetinfo'
+wait '[API_OK]' '[API_NG]'
+wait '[CB_VAL]'
+if 1!=result then
+    dispstr 'CB Timeout'#$0A
+endif
+
+dispstr 'COMB_6_2 SUCCESS'#$0A
+dispstr 'COMB_6_3-4 START'#$0A
+
+
+diff=0
+uptime varstart
+while diff<60000
+    sendln 'lteapi radioon'
+    wait '[API_OK]' '[API_NG]'
+    call check_fail
+    wait '[CB_VAL]'
+    if 1!=result then
+        dispstr 'CB Timeout'#$0A
+    endif
+
+    sendln 'lteapi actpdn testapn 514 0 2 usr1 pwd'
+    wait '[API_OK]' '[API_NG]'
+    call check_fail
+
+    sendln 'lteapi radiooff'
+    wait '[API_OK]' '[API_NG]'
+    call check_fail
+    wait '[CB_VAL] refact_actpdn_cb result : "2"' '[CB_VAL] refact_radiooff_cb result : "0"'
+    wait '[CB_VAL] refact_actpdn_cb result : "2"' '[CB_VAL] refact_radiooff_cb result : "0"'
+    pause 1
+    uptime varend
+    diff = varend - varstart
+endwhile
+
+dispstr 'COMB_6_3-4 SUCCESS'#$0A
+dispstr 'COMB_6_5 START'#$0A
+
+sendln 'lteapi getnetinfo'
+wait '[API_OK]' '[API_NG]'
+wait '[CB_VAL]'
+if 1!=result then
+    dispstr 'CB Timeout'#$0A
+endif
+
+dispstr 'COMB_6_5 SUCCESS'#$0A
+dispstr 'COMB_6_6 START'#$0A
+
+sendln 'lteapi radioon'
+wait '[API_OK]' '[API_NG]'
+call check_fail
+
+sendln 'lteapi actpdn testapn 514 0 2 usr1 pwd'
+wait '[API_OK]' '[API_NG]'
+call check_fail
+wait '[CB_VAL] refact_actpdn_cb result'
+if 1!=result then
+    dispstr 'CB Timeout'#$0A
+endif
+
+dispstr 'COMB_6_6 SUCCESS'#$0A
+dispstr 'COMB_6_7 START'#$0A
+
+sendln 'lteapi getnetinfo'
+wait '[API_OK]' '[API_NG]'
+wait '[CB_VAL]'
+if 1!=result then
+    dispstr 'CB Timeout'#$0A
+endif
+
+dispstr 'COMB_6_7 SUCCESS'#$0A
+
+sendln 'lteapi fin'
+
+dispstr 'Comb06TEST SUCCESS'#$0A
+closett
+end
+
+; +-------Sub routine ----------------------------------------+
+
+:check_fail
+if result!=1 then
+    dispstr 'send finish command'#$0A
+    sendln 'lteapi fin'
+    dispstr 'Comb06TEST FAILURE'#$0A
+    call error_output
+    closett
+    end
+endif
+return
+
+:error_output
+tz="GMT"
+getdate DEBUG_LOG_NAME '..\..\log\comb_06_%Y%m%d%H%M%S.error'
+fileopen file DEBUG_LOG_NAME 1
+if -1==file then
+    messagebox 'File open failed!!' 'Error'
+    goto exit
+endif
+
+filewriteln file 'THIS Test is ERROR. Please check the log.'
+
+return
+

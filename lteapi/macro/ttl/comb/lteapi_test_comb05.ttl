@@ -1,0 +1,193 @@
+; +------- Configurable variable ------------------------------+
+
+; +------------------------------------------------------------+
+
+include '..\comport.ttl'
+
+; +------- Variable -------------------------------------------+
+
+
+; +------- Batch Config----------------------------------------+
+
+;; ②ログファイル名の設定（ログフィルのフルパス）
+;;;; ②−１、保存パスを取得
+getdir DIR
+dirname FULLPATH DIR
+;;;; ②−２、ログファイル名を指定
+getdate LOG_NAME '..\..\log\COMB_05_%Y%m%d%H%M%S.log'
+;;;; ②−３、フルパス完成（合体）
+strconcat FULLPATH LOG_NAME
+ 
+;; ③port接続コマンド作成
+COMMAND = '/C=' 
+strconcat COMMAND COM_PORT 
+strconcat COMMAND ' /BAUD=' 
+strconcat COMMAND BAUDRATE
+ 
+;; ④サーバ接続
+connect COMMAND
+
+logclose
+logopen FULLPATH 0 1 0 1
+
+; +------- Main routine ---------------------------------------+
+setdebug 0
+setsync 1
+
+call log_open
+
+timeout=60
+
+pause 2
+
+diff=0
+uptime varstart
+
+dispstr 'COMB_5 START'#$0A
+
+while diff<60000
+    call get_mem
+    sendln 'lteapi init'
+    wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+    call check_fail
+    sendln 'lteapi pwron'
+    wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+    call check_fail
+    wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+    call check_fail
+    
+;    send 'lteapi stapn '
+;    send SESSION_ID
+;    send ' '
+;    send APNNAME
+;    send ' '
+;    send IP_TYPE
+;    send ' '
+;    send AUTH_TYPE
+;    send ' '
+;    send USERNAME
+;    send ' '
+;    sendln PASSWARD
+;    wait '[API_OK] lte_set_apn return val : "0"' '[API_NG]'
+;    call check_fail
+;    wait '[CB_OK] setapn_cb result : "0"' '[CB_NG]'
+;    call check_fail
+
+    sendln 'lteapi atchnet'
+    wait '[API_OK] lte_attach_network return val : "0"' '[API_NG]'
+    call check_fail
+    wait '[CB_OK] atchnet_cb result : "0"' '[CB_NG]'
+    call check_fail
+    sendln 'lteapi dataon 1'
+    wait '[API_OK] lte_data_on return val : "0"' '[API_NG]'
+    call check_fail
+    wait '[CB_OK] daton_cb result : "0"' '[CB_NG]'
+    call check_fail
+    
+    dispstr 'API_7_5 START'#$0A
+    dispstr 'CB_7_1 START'#$0A
+    dispstr 'CB_7_3 START'#$0A
+    
+    sendln 'lteapi gtnetst'
+    wait '[API_OK] lte_get_netstat return val : "0"' '[API_NG]'
+    call check_fail
+    wait '[CB_OK] getnetst_cb result : "0"' '[CB_NG]'
+    call check_fail
+    wait '[CB_VAL] getnetst_cb state : "0"'
+    call check_fail
+
+    dispstr 'API_7_5 SUCCESS'#$0A
+    dispstr 'CB_7_1 SUCCESS'#$0A
+    dispstr 'CB_7_3 SUCCESS'#$0A
+    dispstr 'API_10_5 START'#$0A
+    dispstr 'CB_10_1 START'#$0A
+    dispstr 'CB_10_3 START'#$0A
+    
+    sendln 'lteapi gtdtst'
+    wait '[API_OK] lte_get_datastat return val : "0"' '[API_NG]'
+    call check_fail
+    wait '[CB_OK] getdtst_cb result : "0"' '[CB_NG]'
+    call check_fail
+    wait '[CB_VAL] getdtst_cb state [session_id] : "2 [1]"'
+    call check_fail
+
+    dispstr 'API_10_5 SUCCESS'#$0A
+    dispstr 'CB_10_1 SUCCESS'#$0A
+    dispstr 'CB_10_3 SUCCESS'#$0A
+
+    sendln 'lteapi dataoff 1'
+    wait '[API_OK] lte_data_off return val : "0"' '[API_NG]'
+    call check_fail
+    wait '[CB_OK] datoff_cb result : "0"' '[CB_NG]'
+    call check_fail
+    sendln 'lteapi dtchnet'
+    wait '[API_OK] lte_detach_network return val : "0"' '[API_NG]'
+    call check_fail
+    wait '[CB_OK] dtchnet_cb result : "0"' '[CB_NG]'
+    call check_fail
+    sendln 'lteapi pwroff'
+    wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+    call check_fail
+    wait '[CB_OK] pwroff_cb result : "0"' '[CB_NG]'
+    call check_fail
+    sendln 'lteapi fin'
+    wait '[API_OK] lte_finalize return val : "0"' '[API_NG]'
+    call check_fail
+    call get_mem
+    uptime varend
+    diff = varend - varstart
+endwhile
+
+
+dispstr 'Comb05TEST FINISH'#$0A
+dispstr 'Check the memory usage of the log'#$0A
+closett
+end
+; +-------Sub routine ----------------------------------------+
+
+:check_fail
+if result!=1 then
+    dispstr 'send finish command'#$0A
+    sendln 'lteapi fin'
+    dispstr 'Comb05TEST FAILURE'#$0A
+    call error_output
+    closett
+    end
+endif
+return
+
+:log_open
+    tz="GMT"
+    getdate DEBUG_LOG_NAME 'log\comb_05_getmem_%Y%m%d%H%M%S.log'
+    fileopen file DEBUG_LOG_NAME 1
+    if -1==file then
+        messagebox 'File open failed!!' 'Error'
+        goto exit
+    endif
+return
+:get_mem
+    sendln 'free'
+    while 1
+        recvln
+        strscan inputstr 'Mem:'
+        if 0<result then
+            filewriteln file '             total       used       free    largest'
+            filewriteln file inputstr
+            break
+        endif
+    endwhile
+return
+
+:error_output
+tz="GMT"
+getdate DEBUG_LOG_NAME '..\..\log\comb_05_%Y%m%d%H%M%S.error'
+fileopen file DEBUG_LOG_NAME 1
+if -1==file then
+    messagebox 'File open failed!!' 'Error'
+    goto exit
+endif
+
+filewriteln file 'THIS Test is ERROR. Please check the log.'
+
+return
+

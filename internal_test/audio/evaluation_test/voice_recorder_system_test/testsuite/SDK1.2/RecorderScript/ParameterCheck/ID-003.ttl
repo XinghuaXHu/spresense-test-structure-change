@@ -1,0 +1,5 @@
+sendln '#####  Parameter check ID-003  #####'
+sendln "voice_recorder SetRecParam 255"
+sendln "voice_recorder SetRecorderMode"
+sendln "voice_recorder InitRecorder 48000 255 16 WAV"
+sendln '#####   End   #####'

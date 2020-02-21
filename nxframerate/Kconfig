@@ -1,0 +1,30 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config TEST_NXFRAMERATE
+	bool "NX and LCD framerate meaturement"
+	default n
+	---help---
+		Enable the framerate measurement test
+
+if TEST_NXFRAMERATE
+
+config TEST_NXFRAMERATE_PROGNAME
+	string "Program name"
+	default "nxframerate"
+	depends on BUILD_KERNEL
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config TEST_NXFRAMERATE_PRIORITY
+	int "Test task priority"
+	default 100
+
+config TEST_NXFRAMERATE_STACKSIZE
+	int "Test stack size"
+	default 2048
+
+endif

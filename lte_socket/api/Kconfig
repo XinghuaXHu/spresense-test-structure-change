@@ -1,0 +1,30 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config LTE_SOCKTEST_API
+	bool "api test"
+	default n
+	---help---
+		Enable the api test
+
+if LTE_SOCKTEST_API
+
+config LTE_SOCKTEST_API_PROGNAME
+	string "Program name"
+	default "apitest"
+	depends on BUILD_KERNEL
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config LTE_SOCKTEST_API_PRIORITY
+	int "apitest task priority"
+	default 100
+
+config LTE_SOCKTEST_API_STACKSIZE
+	int "apitest stack size"
+	default 2048
+
+endif

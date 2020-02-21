@@ -1,0 +1,244 @@
+; +------- Configurable variable ------------------------------+
+
+; +------------------------------------------------------------+
+
+include '..\comport.ttl'
+
+; +------- Variable -------------------------------------------+
+
+
+; +------- Batch Config----------------------------------------+
+
+;; ②ログファイル名の設定（ログフィルのフルパス）
+;;;; ②−１、保存パスを取得
+getdir DIR
+dirname FULLPATH DIR
+;;;; ②−２、ログファイル名を指定
+getdate LOG_NAME '..\..\log\COMB_12_%Y%m%d%H%M%S.log'
+;;;; ②−３、フルパス完成（合体）
+strconcat FULLPATH LOG_NAME
+ 
+;; ③port接続コマンド作成
+COMMAND = '/C=' 
+strconcat COMMAND COM_PORT 
+strconcat COMMAND ' /BAUD=' 
+strconcat COMMAND BAUDRATE
+ 
+;; ④サーバ接続
+connect COMMAND
+
+logclose
+logopen FULLPATH 0 1 0 1
+
+; +------- Main routine ---------------------------------------+
+setdebug 0
+setsync 1
+
+timeout=60
+
+pause 2
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi atchnet'
+wait '[API_OK] lte_attach_network return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] atchnet_cb result : "0"' '[CB_NG]'
+call check_fail
+
+dispstr 'COMB_12_1 START'#$0A
+dispstr 'API_14_4 START'#$0A
+dispstr 'CB_14_1 START'#$0A
+
+send 'lteapi stapn '
+send SESSION_ID
+send ' '
+send APNNAME
+send ' '
+send IP_TYPE
+send ' '
+send AUTH_TYPE
+send ' '
+send USERNAME
+send ' '
+sendln PASSWARD
+wait '[API_OK] lte_set_apn return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] setapn_cb result : "0"' '[CB_NG]'
+call check_fail
+
+dispstr 'API_14_4 SUCCESS'#$0A
+dispstr 'CB_14_1 SUCCESS'#$0A
+
+sendln 'lteapi dataon 1'
+wait '[API_OK] lte_data_on return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] daton_cb result : "0"' '[CB_NG]'
+call check_fail
+
+dispstr 'COMB_12_1 SUCCESS'#$0A
+dispstr 'COMB_12_2 START'#$0A
+
+pause 1
+
+sendln 'lteapi dataoff 1'
+wait '[API_OK] lte_data_off return val : "0"' '[API_NG]'
+wait '[CB_OK] datoff_cb result : "0"' '[CB_NG]'
+call check_fail
+
+dispstr 'COMB_12_2 SUCCESS'#$0A
+dispstr 'COMB_12_3 START'#$0A
+
+send 'lteapi stapn '
+send SESSION_ID2
+send ' '
+send APNNAME2
+send ' '
+send IP_TYPE2
+send ' '
+send AUTH_TYPE2
+send ' '
+send USERNAME2
+send ' '
+sendln PASSWARD2
+wait '[API_OK] lte_set_apn return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] setapn_cb result : "0"' '[CB_NG]'
+call check_fail
+
+send 'lteapi dataon '
+sendln SESSION_ID2
+wait '[API_OK] lte_data_on return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] daton_cb result : "0"' '[CB_NG]'
+call check_fail
+
+dispstr 'COMB_12_3 SUCCESS'#$0A
+dispstr 'COMB_12_4 START'#$0A
+
+pause 1
+
+send 'lteapi dataoff '
+sendln SESSION_ID2
+wait '[API_OK] lte_data_off return val : "0"' '[API_NG]'
+wait '[CB_OK] datoff_cb result : "0"' '[CB_NG]'
+call check_fail
+
+dispstr 'COMB_12_4 SUCCESS'#$0A
+dispstr 'COMB_12_5 START'#$0A
+
+send 'lteapi stapn '
+send SESSION_ID
+send ' '
+send 'test.apn'
+send ' '
+send IP_TYPE
+send ' '
+send AUTH_TYPE
+send ' '
+send 'user'
+send ' '
+sendln 'hoge'
+wait '[API_OK] lte_set_apn return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] setapn_cb result : "0"' '[CB_NG]'
+call check_fail
+
+send 'lteapi dataon '
+sendln SESSION_ID2
+wait '[API_OK] lte_data_on return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] daton_cb result : "0"' '[CB_NG]'
+call check_fail
+
+dispstr 'COMB_12_5 SUCCESS'#$0A
+dispstr 'COMB_12_6 START'#$0A
+
+dispstr 'API_13_5 START'#$0A
+dispstr 'CB_13_1 START'#$0A
+dispstr 'CB_13_3 START'#$0A
+dispstr 'CB_13_4 START'#$0A
+dispstr 'CB_13_5 START'#$0A
+dispstr 'CB_13_6 START'#$0A
+
+sendln 'lteapi gtapnst'
+wait '[API_OK] lte_get_apnset return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] getapnst_cb result : "0"' '[CB_NG]'
+call check_fail
+wait '[CB_VAL] getapnst_cb listnum :'
+call check_fail
+wait '[CB_VAL] getapnst_cb [0] session_id :'
+call check_fail
+wait '[CB_VAL] getapnst_cb [0] apn        : '
+call check_fail
+wait '[CB_VAL] getapnst_cb [0] ip_type    : '
+call check_fail
+
+dispstr 'API_13_5 SUCCESS'#$0A
+dispstr 'CB_13_1 SUCCESS'#$0A
+dispstr 'CB_13_3 SUCCESS'#$0A
+dispstr 'CB_13_4 SUCCESS'#$0A
+dispstr 'CB_13_5 SUCCESS'#$0A
+dispstr 'CB_13_6 SUCCESS'#$0A
+
+pause 5
+
+dispstr 'COMB_12_6 SUCCESS'#$0A
+
+send 'lteapi stapn '
+send SESSION_ID
+send ' '
+send APNNAME
+send ' '
+send IP_TYPE
+send ' '
+send AUTH_TYPE
+send ' '
+send USERNAME
+send ' '
+sendln PASSWARD
+wait '[API_OK] lte_set_apn return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] setapn_cb result : "0"' '[CB_NG]'
+call check_fail
+
+call check_fail
+
+sendln 'lteapi fin'
+
+dispstr 'COMB_12_TEST SUCCESS'#$0A
+closett
+end
+; +-------Sub routine ----------------------------------------+
+
+:check_fail
+if result!=1 then
+    dispstr 'COMB_12_TEST FAILURE'#$0A
+    dispstr 'send finish command'#$0A
+    sendln 'lteapi fin'
+    call error_output
+closett
+    end
+endif
+return
+
+:error_output
+tz="GMT"
+getdate DEBUG_LOG_NAME '..\..\log\comb_12_%Y%m%d%H%M%S.error'
+fileopen file DEBUG_LOG_NAME 1
+if -1==file then
+    messagebox 'File open failed!!' 'Error'
+    goto exit
+endif
+
+filewriteln file 'THIS Test is ERROR. Please check the log.'
+
+return

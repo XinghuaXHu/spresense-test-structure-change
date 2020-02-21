@@ -1,0 +1,189 @@
+; +------- Configurable variable ------------------------------+
+
+; +------------------------------------------------------------+
+
+include '..\comport.ttl'
+
+; +------- Variable -------------------------------------------+
+
+
+; +------- Batch Config----------------------------------------+
+
+;; ②ログファイル名の設定（ログフィルのフルパス）
+;;;; ②−１、保存パスを取得
+getdir DIR
+dirname FULLPATH DIR
+;;;; ②−２、ログファイル名を指定
+getdate LOG_NAME '..\..\log\comb_08_%Y%m%d%H%M%S.log'
+;;;; ②−３、フルパス完成（合体）
+strconcat FULLPATH LOG_NAME
+ 
+;; ③port接続コマンド作成
+COMMAND = '/C=' 
+strconcat COMMAND COM_PORT 
+strconcat COMMAND ' /BAUD=' 
+strconcat COMMAND BAUDRATE
+ 
+;; ④サーバ接続
+connect COMMAND
+
+logclose
+logopen FULLPATH 0 1 0 1
+
+; +------- Main routine ---------------------------------------+
+setdebug 0
+setsync 1
+
+timeout=60
+
+pause 2
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi atchnet'
+wait '[API_OK] lte_attach_network return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] atchnet_cb result : "0"' '[CB_NG]'
+call check_fail
+
+pause 10
+
+dispstr 'COMB_8_1 START'#$0A
+
+dispstr 'CB_8_4 START'#$0A
+
+sendln 'lteapi dataon 1'
+wait '[API_OK] lte_data_on return val : "0"' '[API_NG]'
+call check_fail
+sendln 'lteapi dataoff 1'
+wait '[API_OK] lte_data_off return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_NG] daton_cb result : "2"' '[CB_OK] datoff_cb result : "0"'
+wait '[CB_NG] daton_cb result : "2"' '[CB_OK] datoff_cb result : "0"'
+
+dispstr 'CB_8_4 SUCCESS'#$0A
+
+dispstr 'COMB_8_1 SUCCESS'#$0A
+dispstr 'COMB_8_2 START'#$0A
+
+pause 60
+
+sendln 'lteapi gtdtst'
+wait '[API_OK] lte_get_datastat return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] getdtst_cb result : "0"' '[CB_NG]'
+call check_fail
+wait '[CB_VAL] getdtst_cb state [session_id] : "3 [1]"'
+call check_fail
+
+dispstr 'COMB_8_2 SUCCESS'#$0A
+dispstr 'COMB_8_4 START'#$0A
+
+diff=0
+
+uptime varstart
+while diff<120000
+    dispstr 'COMB_8_3 START'#$0A
+    sendln 'lteapi dataon 1'
+    wait '[API_OK] lte_data_on return val : "0"' '[API_NG]'
+    call check_fail
+    sendln 'lteapi dataoff 1'
+    wait '[API_OK] lte_data_off return val : "0"' '[API_NG]'
+    call check_fail
+    wait '[CB_NG] daton_cb result : "2"' '[CB_OK] datoff_cb result : "0"'
+    wait '[CB_NG] daton_cb result : "2"' '[CB_OK] datoff_cb result : "0"'
+    dispstr 'COMB_8_3 SUCCESS'#$0A
+
+    pause 1
+
+    uptime varend
+    diff = varend - varstart
+endwhile
+dispstr 'COMB_8_4 SUCCESS'#$0A
+
+
+dispstr 'COMB_8_5 START'#$0A
+
+sendln 'lteapi gtnetst'
+wait '[API_OK] lte_get_netstat return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] getnetst_cb result : "0"' '[CB_NG]'
+call check_fail
+wait '[CB_VAL] getnetst_cb state : "0"'
+
+sendln 'lteapi gtdtst'
+wait '[API_OK] lte_get_datastat return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] getdtst_cb result : "0"' '[CB_NG]'
+call check_fail
+wait '[CB_VAL] getdtst_cb state [session_id] : "3 [1]"'
+call check_fail
+
+dispstr 'COMB_8_5 SUCCESS'#$0A
+dispstr 'COMB_8_6 START'#$0A
+
+sendln 'lteapi dataon 1'
+wait '[API_OK] lte_data_on return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] daton_cb result : "0"' '[CB_NG]'
+call check_fail
+
+dispstr 'COMB_8_6 SUCCESS'#$0A
+dispstr 'COMB_8_7 START'#$0A
+
+sendln 'lteapi gtnetst'
+wait '[API_OK] lte_get_netstat return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] getnetst_cb result : "0"' '[CB_NG]'
+call check_fail
+wait '[CB_VAL] getnetst_cb state : "0"'
+
+sendln 'lteapi gtdtst'
+wait '[API_OK] lte_get_datastat return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] getdtst_cb result : "0"' '[CB_NG]'
+call check_fail
+wait '[CB_VAL] getdtst_cb state [session_id] : "2 [1]"'
+call check_fail
+
+dispstr 'COMB_8_7 SUCCESS'#$0A
+
+
+dispstr 'COMB_8_TEST SUCCESS'#$0A
+
+sendln 'lteapi fin'
+
+closett
+end
+; +-------Sub routine ----------------------------------------+
+
+:check_fail
+if result!=1 then
+    dispstr 'COMB_8_TEST FAILURE'#$0A
+    dispstr 'send finish command'#$0A
+    sendln 'lteapi fin'
+    call error_output
+    closett
+    end
+endif
+return
+:error_output
+tz="GMT"
+getdate DEBUG_LOG_NAME '..\..\log\comb_08_%Y%m%d%H%M%S.error'
+fileopen file DEBUG_LOG_NAME 1
+if -1==file then
+    messagebox 'File open failed!!' 'Error'
+    goto exit
+endif
+
+filewriteln file 'THIS Test is ERROR. Please check the log.'
+
+return

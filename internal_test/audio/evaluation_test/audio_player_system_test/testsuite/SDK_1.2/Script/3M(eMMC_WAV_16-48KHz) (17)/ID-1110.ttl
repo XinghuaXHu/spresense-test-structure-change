@@ -1,0 +1,2 @@
+sendln "player SetPlayerMode"
+sendln "player SetPlayerMode"

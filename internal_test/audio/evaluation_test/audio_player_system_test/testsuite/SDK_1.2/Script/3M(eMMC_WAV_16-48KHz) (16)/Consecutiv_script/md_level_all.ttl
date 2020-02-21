@@ -1,0 +1,85 @@
+sendln '#####  ID-902  #####'
+sendln "player SetInputDevice 3"
+sendln "player SetPlayerMode"
+sendln "dbg level AS I"
+sendln '#####  Play-Stop  #####'
+sendln "player InitPlayer 1 0 1 0"
+sendln "player PlayMusic"
+pause 8
+sendln "player StopMusic"
+sendln "player InitPlayer 0 0 1 0"
+sendln "player PlayMusic"
+pause 8
+sendln "player StopMusic"
+sendln "player SetReadyStatus"
+sendln '#####  ID-903  #####'
+sendln "player SetInputDevice 3"
+sendln "player SetPlayerMode"
+sendln "dbg level AS I"
+sendln '#####  Play-Stop  #####'
+sendln "player InitPlayer 0 0 1 0"
+sendln "player PlayMusic"
+pause 8
+sendln "player StopMusic"
+sendln "player InitPlayer 1 0 1 0"
+sendln "player PlayMusic"
+pause 8
+sendln "player StopMusic"
+sendln "player SetReadyStatus"
+sendln '#####  ID-904  #####'
+sendln "player SetInputDevice 3"
+sendln "player SetPlayerMode"
+sendln "dbg level AS I"
+sendln '#####  Play-Stop  #####'
+sendln "player InitPlayer 1 0 1 1"
+sendln "player PlayMusic"
+pause 8
+sendln "player StopMusic"
+sendln "player InitPlayer 0 0 1 1"
+sendln "player PlayMusic"
+pause 8
+sendln "player StopMusic"
+sendln "player SetReadyStatus"
+sendln '#####  ID-905  #####'
+sendln "player SetInputDevice 3"
+sendln "player SetPlayerMode"
+sendln "dbg level AS I"
+sendln '#####  Play-Stop  #####'
+sendln "player InitPlayer 0 0 1 1"
+sendln "player PlayMusic"
+pause 8
+sendln "player StopMusic"
+sendln "player InitPlayer 1 0 1 1"
+sendln "player PlayMusic"
+pause 8
+sendln "player StopMusic"
+sendln "player SetReadyStatus"
+sendln '#####  ID-906  #####'
+sendln "player SetInputDevice 3"
+sendln "player SetPlayerMode"
+sendln "dbg level AS I"
+sendln '#####  Play-Stop  #####'
+sendln "player InitPlayer 1 0 1 2"
+sendln "player PlayMusic"
+pause 8
+sendln "player StopMusic"
+sendln "player InitPlayer 0 0 1 2"
+sendln "player PlayMusic"
+pause 8
+sendln "player StopMusic"
+sendln "player SetReadyStatus"
+sendln '#####  ID-907  #####'
+sendln "player SetInputDevice 3"
+sendln "player SetPlayerMode"
+sendln "dbg level AS I"
+sendln '#####  Play-Stop  #####'
+sendln "player InitPlayer 0 0 1 2"
+sendln "player PlayMusic"
+pause 8
+sendln "player StopMusic"
+sendln "player InitPlayer 1 0 1 2"
+sendln "player PlayMusic"
+pause 8
+sendln "player StopMusic"
+sendln "player SetReadyStatus"
+sendln '#####   End   #####'

@@ -1,0 +1,470 @@
+; +------- Configurable variable ------------------------------+
+
+; +------------------------------------------------------------+
+
+include '..\comport.ttl'
+
+; +------- Variable -------------------------------------------+
+
+
+; +------- Batch Config----------------------------------------+
+
+;; ②ログファイル名の設定（ログフィルのフルパス）
+;;;; ②−１、保存パスを取得
+getdir DIR
+dirname FULLPATH DIR
+;;;; ②−２、ログファイル名を指定
+getdate LOG_NAME '..\..\log\api_state_pwron_%Y%m%d%H%M%S.log'
+;;;; ②−３、フルパス完成（合体）
+strconcat FULLPATH LOG_NAME
+ 
+;; ③port接続コマンド作成
+COMMAND = '/C=' 
+strconcat COMMAND COM_PORT 
+strconcat COMMAND ' /BAUD=' 
+strconcat COMMAND BAUDRATE
+ 
+;; ④サーバ接続
+connect COMMAND
+
+logclose
+logopen FULLPATH 0 1 0 1
+
+; +------- Main routine ---------------------------------------+
+setdebug 0
+setsync 1
+
+timeout=60
+
+pause 2
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+dispstr 'API_1_3 START'#$0A
+
+sendln 'lteapi init'
+wait '[API_NG] lte_initialize return val : "-120"' '[API_OK]'
+call check_fail
+
+dispstr 'API_1_3 SUCCESS'#$0A
+dispstr 'API_3_3 START'#$0A
+
+sendln 'lteapi pwron'
+wait '[API_NG] lte_power_control return val : "-120"' '[API_OK]'
+call check_fail
+
+dispstr 'API_3_3 SUCCESS'#$0A
+dispstr 'API_7_3 START'#$0A
+
+sendln 'lteapi gtnetst'
+wait '[API_OK] lte_get_netstat return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] getnetst_cb result : "0"' '[CB_NG]'
+call check_fail
+wait '[CB_VAL] getnetst_cb state : "1"'
+call check_fail
+
+dispstr 'API_7_3 SUCCESS'#$0A
+dispstr 'API_10_3 START'#$0A
+dispstr 'CB_10_2 START'#$0A
+
+sendln 'lteapi gtdtst'
+wait '[API_OK] lte_get_datastat return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_NG] getdtst_cb result : "1"' '[CB_OK]'
+call check_fail
+
+dispstr 'API_10_3 SUCCESS'#$0A
+dispstr 'CB_10_2 SUCCESS'#$0A
+dispstr 'API_6_3 START'#$0A
+
+sendln 'lteapi dtchnet'
+wait '[API_OK] lte_detach_network return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] dtchnet_cb result : "0"' '[CB_NG]'
+call check_fail
+
+dispstr 'API_6_3 SUCCESS'#$0A
+dispstr 'API_8_3 START'#$0A
+dispstr 'CB_8_2 START'#$0A
+dispstr 'CB_8_10 START'#$0A
+
+sendln 'lteapi dataon 1'
+wait '[API_OK] lte_data_on return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_NG] daton_cb result : "1"' '[CB_OK]'
+call check_fail
+wait '[CB_NG] daton_cb error : "255"'
+call check_fail
+
+dispstr 'API_8_3 SUCCESS'#$0A
+dispstr 'CB_8_2 SUCCESS'#$0A
+dispstr 'CB_8_10 SUCCESS'#$0A
+
+dispstr 'API_9_3 START'#$0A
+
+sendln 'lteapi dataoff 1'
+wait '[API_OK] lte_data_off return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] datoff_cb result : "0"' '[CB_NG]'
+call check_fail
+
+dispstr 'API_9_3 SUCCESS'#$0A
+dispstr 'API_11_3 START'#$0A
+
+sendln 'lteapi gtdtcfg LTE_DATA_TYPE_USER'
+wait '[API_OK] lte_get_dataconfig return val : "0"' '[API_NG]'
+wait '[CB_OK] getdtcfg_cb result : "0"' '[CB_NG]'
+call check_fail
+wait '[CB_VAL] getdtcfg_cb data_type'
+call check_fail
+wait '[CB_VAL] getdtcfg_cb general'
+call check_fail
+wait '[CB_VAL] getdtcfg_cb roaming'
+call check_fail
+
+dispstr 'API_11_3 SUCCESS'#$0A
+dispstr 'API_12_3 START'#$0A
+
+sendln 'lteapi stdtcfg LTE_DATA_TYPE_USER LTE_ENABLE LTE_ENABLE'
+wait '[API_OK] lte_set_dataconfig return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] setdtcfg_cb result : "0"' '[CB_NG]'
+call check_fail
+
+dispstr 'API_12_3 SUCCESS'#$0A
+dispstr 'API_14_3 START'#$0A
+
+send 'lteapi stapn '
+send SESSION_ID
+send ' '
+send APNNAME
+send ' '
+send IP_TYPE
+send ' '
+send AUTH_TYPE
+send ' '
+send USERNAME
+send ' '
+sendln PASSWARD
+
+wait '[API_OK] lte_set_apn return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] setapn_cb result : "0"' '[CB_NG]'
+call check_fail
+
+dispstr 'API_14_3 SUCCESS'#$0A
+dispstr 'API_13_3 START'#$0A
+
+sendln 'lteapi gtapnst'
+wait '[API_OK] lte_get_apnset return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] getapnst_cb result : "0"' '[CB_NG]'
+call check_fail
+wait '[CB_VAL] getapnst_cb listnum'
+call check_fail
+wait '[CB_VAL] getapnst_cb [0] session_id'
+call check_fail
+wait '[CB_VAL] getapnst_cb [0] apn'
+call check_fail
+wait '[CB_VAL] getapnst_cb [0] ip_type'
+call check_fail
+
+pause 1
+
+dispstr 'API_13_3 SUCCESS'#$0A
+dispstr 'API_15_3 START'#$0A
+
+sendln 'lteapi gtver'
+wait '[API_OK] lte_get_version return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] gtver_cb result : "0"' '[CB_NG]'
+call check_fail
+wait '[CB_VAL] gtver_cb bb_product'
+call check_fail
+wait '[CB_VAL] gtver_cb np_package'
+call check_fail
+
+dispstr 'API_15_3 SUCCESS'#$0A
+dispstr 'API_16_3 START'#$0A
+
+sendln 'lteapi gtphno'
+wait '[API_OK] lte_get_phoneno return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] gtphno_cb result : "0"' '[CB_NG]'
+call check_fail
+wait '[CB_VAL] gtphno_cb phoneno'
+call check_fail
+
+dispstr 'API_16_3 SUCCESS'#$0A
+dispstr 'API_17_3 START'#$0A
+
+sendln 'lteapi gtimsi'
+wait '[API_OK] lte_get_imsi return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] gtimsi_cb result : "0"' '[CB_NG]'
+call check_fail
+wait '[CB_VAL] gtimsi_cb imsi'
+call check_fail
+
+dispstr 'API_17_3 SUCCESS'#$0A
+dispstr 'API_18_3 START'#$0A
+
+sendln 'lteapi gtimei'
+wait '[API_OK] lte_get_imei return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] gtimei_cb result : "0"' '[CB_NG]'
+call check_fail
+wait '[CB_VAL] gtimei_cb imei'
+call check_fail
+
+dispstr 'API_18_3 SUCCESS'#$0A
+dispstr 'API_19_3 START'#$0A
+
+sendln 'lteapi gtpinst'
+wait '[API_OK] lte_get_pinset return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] gtpinst_cb result : "0"' '[CB_NG]'
+call check_fail
+wait '[CB_VAL] gtpinst_cb pin_attemptsleft'
+call check_fail
+wait '[CB_VAL] gtpinst_cb puk_attemptsleft'
+call check_fail
+wait '[CB_VAL] gtpinst_cb pin2_attemptsleft'
+call check_fail
+wait '[CB_VAL] gtpinst_cb puk2_attemptsleft'
+call check_fail
+
+dispstr 'API_19_3 SUCCESS'#$0A
+dispstr 'API_20_3 START'#$0A
+
+send 'lteapi stpinenb LTE_PIN_ENABLE '
+sendln DEFAULTPIN
+
+wait '[API_OK] lte_set_pinenable return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] stpnenbl_cb result : "0"' '[CB_NG]'
+call check_fail
+
+dispstr 'API_20_3 SUCCESS'#$0A
+dispstr 'API_21_3 START'#$0A
+
+send 'lteapi cngpin LTE_TARGET_PIN '
+send DEFAULTPIN
+send ' '
+sendln CHANGEPIN
+
+wait '[API_OK] lte_change_pin return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] cngpin_cb result : "0"' '[CB_NG]'
+call check_fail
+
+dispstr 'API_21_3 SUCCESS'#$0A
+dispstr 'API_22_3 START'#$0A
+
+send 'lteapi entpin '
+send DEFAULTPIN
+send ' '
+sendln DEFAULTPIN
+
+wait '[API_OK] lte_enter_pin return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_NG] entpin_cb result : "1"' '[CB_OK]'
+call check_fail
+
+dispstr 'API_22_3 SUCCESS'#$0A
+
+dispstr '----- PIM UNDO PROCESS -----'#$0A
+
+send 'lteapi cngpin LTE_TARGET_PIN '
+send CHANGEPIN
+send ' '
+sendln DEFAULTPIN
+
+wait '[API_OK] lte_change_pin return val : "0"' '[API_NG]'
+wait '[CB_OK] cngpin_cb result : "0"' '[CB_NG]'
+
+send 'lteapi stpinenb LTE_PIN_DISABLE '
+sendln DEFAULTPIN
+
+wait '[API_OK] lte_set_pinenable return val : "0"' '[API_NG]'
+wait '[CB_OK] stpnenbl_cb result : "0"' '[CB_NG]'
+
+dispstr '----- PIM UNDO PROCESS END -----'#$0A
+
+dispstr 'API_23_3 START'#$0A
+
+sendln 'lteapi gtlcltm'
+wait '[API_OK] lte_get_localtime return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] gtlcltm_cb result : "0"' '[CB_NG]'
+call check_fail
+wait '[CB_VAL] gtlcltm_cb time'
+call check_fail
+wait '[CB_VAL] gtlcltm_cb time_zone'
+call check_fail
+
+dispstr 'API_23_3 SUCCESS'#$0A
+dispstr 'API_24_3 START'#$0A
+
+sendln 'lteapi gtoprtr'
+wait '[API_OK] lte_get_operator return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] gtoprtr_cb result : "0"' '[CB_NG]'
+call check_fail
+wait '[CB_VAL] gtoprtr_cb oper'
+call check_fail
+
+dispstr 'API_24_3 SUCCESS'#$0A
+dispstr 'API_27_3 START'#$0A
+
+sendln 'lteapi gtedrx'
+wait '[API_OK] lte_get_edrx return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] getedrx_cb result : "0"' '[CB_NG]'
+call check_fail
+wait '[CB_VAL] getedrx_cb enable'
+call check_fail
+
+dispstr 'API_27_3 SUCCESS'#$0A
+dispstr 'API_28_3 START'#$0A
+
+sendln 'lteapi stedrx LTE_ENABLE LTE_EDRX_CYC_1024 LTE_EDRX_PTW_256'
+wait '[API_OK] lte_set_edrx return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] setedrx_cb result : "0"' '[CB_NG]'
+call check_fail
+
+dispstr 'API_28_3 SUCCESS'#$0A
+dispstr 'API_29_3 START'#$0A
+
+sendln 'lteapi gtpsm'
+wait '[API_OK] lte_get_psm return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] getpsm_cb result : "0"' '[CB_NG]'
+call check_fail
+wait '[CB_VAL] getpsm_cb enable'
+call check_fail
+
+pause 1
+
+dispstr 'API_29_3 SUCCESS'#$0A
+dispstr 'API_30_3 START'#$0A
+
+sendln 'lteapi stpsm LTE_ENABLE LTE_PSM_T3324_UNIT_1MIN 10 LTE_PSM_T3412_UNIT_30SEC 10'
+wait '[API_OK] lte_set_psm return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] setpsm_cb result : "0"' '[CB_NG]'
+
+timeout= 10
+
+dispstr 'API_30_3 SUCCESS'#$0A
+dispstr 'API_36_3 START'#$0A
+dispstr 'CB_36_2 START'#$0A
+
+sendln 'lteapi strpqty 5'
+wait '[API_OK] lte_set_report_quality return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_VAL] qtyrepo_cb valid : "0"'
+call check_fail
+wait '[CB_VAL] qtyrepo_cb valid : "0"'
+call check_fail
+
+dispstr 'API_36_3 SUCCESS'#$0A
+dispstr 'CB_36_2 SUCCESS'#$0A
+dispstr 'API_36_4 START'#$0A
+
+sendln 'lteapi strpqty 5 NULL'
+wait '[API_OK] lte_set_report_quality return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_VAL] qtyrepo_cb valid'
+if result!=0 then
+    dispstr 'send finish command'#$0A
+    sendln 'lteapi fin'
+    dispstr 'APICALL_PWRON_STATETEST FAILURE'#$0A
+    call error_output
+    closett
+    end
+else
+    dispstr 'Not recieve Callback'#$0A
+endif
+
+dispstr 'API_36_4 SUCCESS'#$0A
+dispstr 'API_37_3 START'#$0A
+dispstr 'CB_37_2 START'#$0A
+
+sendln 'lteapi strpclinf 5'
+wait '[API_OK] lte_set_report_cellinfo return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_VAL] clinfrepo_cb valid      : "0"'
+call check_fail
+wait '[CB_VAL] clinfrepo_cb valid      : "0"'
+call check_fail
+
+dispstr 'API_37_3 SUCCESS'#$0A
+dispstr 'CB_37_2 SUCCESS'#$0A
+dispstr 'API_37_4 START'#$0A
+
+sendln 'lteapi strpclinf 5 NULL'
+wait '[API_OK] lte_set_report_cellinfo return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_VAL] clinfrepo_cb valid'
+if result!=0 then
+    dispstr 'send finish command'#$0A
+    sendln 'lteapi fin'
+    dispstr 'APICALL_PWRON_STATETEST FAILURE'#$0A
+    call error_output
+    closett
+    end
+else
+    dispstr 'Not recieve Callback'#$0A
+endif
+
+dispstr 'API_37_4 SUCCESS'#$0A
+
+
+
+sendln 'lteapi pwroff'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwroff_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi fin'
+
+dispstr 'API_PWRON_STATE_TEST SUCCESS'#$0A
+closett
+end
+; +-------Sub routine ----------------------------------------+
+
+:check_fail
+if result!=1 then
+    dispstr 'send finish command'#$0A
+    sendln 'lteapi fin'
+    dispstr 'API_PWRON_STATE_TEST FAILURE'#$0A
+    call error_output
+    closett
+    end
+endif
+return
+
+:error_output
+tz="GMT"
+getdate DEBUG_LOG_NAME '..\..\log\api_state_pwron_%Y%m%d%H%M%S.error'
+fileopen file DEBUG_LOG_NAME 1
+if -1==file then
+    messagebox 'File open failed!!' 'Error'
+    goto exit
+endif
+
+filewriteln file 'THIS Test is ERROR. Please check the log.'
+
+return

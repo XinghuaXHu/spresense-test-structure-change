@@ -1,0 +1,12 @@
+sendln "player SetInputDevice 3"
+sendln "player SetPlayerMode"
+sendln "dbg level AS I"
+sendln "player InitPlayer 1 0 1 0"
+for i 1 3
+ int2str cnt i
+ sendln '#####  Play-Stop 'cnt' #####'
+ sendln "player PlayMusic"
+ pause 8
+ sendln "player StopMusic"
+next
+sendln "player SetReadyStatus"

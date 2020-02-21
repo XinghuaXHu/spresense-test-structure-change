@@ -1,0 +1,61 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config TEST_SRC_COMPONENT
+	bool "src component test"
+	default n
+	select MEMUTILS_MEMORY_MANAGER
+	select MEMUTILS_MESSAGE
+	select MEMUTILS_S_STL
+
+config TEST_SRC_COMPONENT_PROGNAME
+	string "Program name"
+	default "test_src_component"
+	depends on TEST_SRC_COMPONENT
+
+config TEST_SRC_COMPONENT_PRIORITY
+	int "Test src task priority"
+	default 100
+	depends on TEST_SRC_COMPONENT
+
+config TEST_SRC_COMPONEN_STACKSIZE
+	int "Test src stack size"
+	default 4096
+	depends on TEST_SRC_COMPONENT
+
+config TEST_SRC_FILE_MOUNTPT
+	string "Test contents file mount path"
+	default "/mnt/vfat/AUDIO"
+	depends on TEST_SRC_COMPONENT
+	---help---
+		The path to the play file mount point. Default: /mnt/vfat/AUDIO
+
+config AUDIOUTILS_PLAYLIST_PLAYLISTFILE_MOUNTPT
+	string "test playlist file mount path"
+	default "/mnt/vfat/PLAYLIST"
+	depends on TEST_SRC_COMPONENT
+	---help---
+		The path to the playlist file mount point. Default: /mnt/vfat/PLAYLIST
+
+config AUDIOUTILS_DSP_MOUNTPT
+	string "DSP image mount path"
+	default "/mnt/vfat/BIN"
+	depends on TEST_SRC_COMPONENT
+	---help---
+		The path to the DSP mount point. Default: /mnt/vfat/BIN"
+
+config TEST_SRC_OUTPUT_FILE_MOUNTPT
+	string "recording file mount path"
+	default "/mnt/vfat/SRC"
+	depends on TEST_SRC_COMPONENT
+	---help---
+		The path to the recording file mount point. Default: /mnt/vfat/SRC
+
+config AUDIOUTILS_DSP_DEBUG_DUMP
+	bool "dsp debug dump"
+	default n
+	depends on TEST_SRC_COMPONENT && CXD56_LOG
+	---help---
+		Enable Dsp Debug Dump

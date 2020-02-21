@@ -1,0 +1,201 @@
+; +------- Configurable variable ------------------------------+
+
+; +------------------------------------------------------------+
+
+include '..\comport.ttl'
+
+; +------- Variable -------------------------------------------+
+
+
+; +------- Batch Config----------------------------------------+
+
+;; ②ログファイル名の設定（ログフィルのフルパス）
+;;;; ②−１、保存パスを取得
+getdir DIR
+dirname FULLPATH DIR
+;;;; ②−２、ログファイル名を指定
+getdate LOG_NAME '..\..\log\api_strplcltm_%Y%m%d%H%M%S.log'
+;;;; ②−３、フルパス完成（合体）
+strconcat FULLPATH LOG_NAME
+ 
+;; ③port接続コマンド作成
+COMMAND = '/C=' 
+strconcat COMMAND COM_PORT 
+strconcat COMMAND ' /BAUD=' 
+strconcat COMMAND BAUDRATE
+ 
+;; ④サーバ接続
+connect COMMAND
+
+logclose
+logopen FULLPATH 0 1 0 1
+
+; +------- Main routine ---------------------------------------+
+setdebug 0
+setsync 1
+
+timeout=60
+
+pause 2
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+dispstr 'API_35_3 START'#$0A
+dispstr 'CB_35_1 START'#$0A
+dispstr 'CB_35_2 START'#$0A
+dispstr 'CB_35_3 START'#$0A
+dispstr 'CB_35_4 START'#$0A
+dispstr 'CB_35_5 START'#$0A
+dispstr 'CB_35_6 START'#$0A
+dispstr 'CB_35_7 START'#$0A
+
+sendln 'lteapi strplcltm'
+wait '[API_OK] lte_set_report_localtime return val : "0"' '[API_NG]'
+call check_fail
+
+sendln 'lteapi atchnet'
+wait '[API_OK] lte_attach_network return val : "0"' '[API_NG]'
+call check_fail
+
+wait '[CB_OK] atchnet_cb' '[CB_VAL] lcltmrepo_cb'
+
+wait '[CB_OK] atchnet_cb' '[CB_VAL] lcltmrepo_cb'
+
+wait '[CB_OK] atchnet_cb' '[CB_VAL] lcltmrepo_cb'
+
+dispstr 'API_35_3 SUCCESS'#$0A
+dispstr 'CB_35_1 SUCCESS'#$0A
+dispstr 'CB_35_2 SUCCESS'#$0A
+dispstr 'CB_35_3 SUCCESS'#$0A
+dispstr 'CB_35_4 SUCCESS'#$0A
+dispstr 'CB_35_5 SUCCESS'#$0A
+dispstr 'CB_35_6 SUCCESS'#$0A
+dispstr 'CB_35_7 SUCCESS'#$0A
+
+dispstr 'API_35_6 START'#$0A
+
+sendln 'lteapi strplcltm NULL'
+wait '[API_OK] lte_set_report_localtime return val : "0"' '[API_NG]'
+call check_fail
+
+sendln 'lteapi dtchnet'
+wait '[API_OK] lte_detach_network return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] dtchnet_cb result : "0"' '[CB_NG]'
+call check_fail
+
+timeout=30
+
+sendln 'lteapi atchnet'
+wait '[API_OK] lte_attach_network return val : "0"' '[API_NG]'
+call check_fail
+
+wait '[CB_VAL] lcltmrepo_cb time'
+if result!=0 then
+    dispstr 'send finish command'#$0A
+    sendln 'lteapi fin'
+    dispstr 'API_STRPLCLTM_TEST FAILURE'#$0A
+    call error_output
+    closett
+    end
+endif
+
+pause 5
+
+dispstr 'API_35_6 SUCCESS'#$0A
+dispstr 'API_35_5 START'#$0A
+
+sendln 'lteapi strplcltm'
+wait '[API_OK] lte_set_report_localtime return val : "0"' '[API_NG]'
+call check_fail
+
+sendln 'lteapi dtchnet'
+wait '[API_OK] lte_detach_network return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] dtchnet_cb result : "0"' '[CB_NG]'
+call check_fail
+
+timeout=60
+
+sendln 'lteapi atchnet'
+wait '[API_OK] lte_attach_network return val : "0"' '[API_NG]'
+call check_fail
+
+wait '[CB_OK] atchnet_cb' '[CB_VAL] lcltmrepo_cb'
+
+wait '[CB_OK] atchnet_cb' '[CB_VAL] lcltmrepo_cb'
+
+wait '[CB_OK] atchnet_cb' '[CB_VAL] lcltmrepo_cb'
+
+dispstr 'API_35_5 SUCCESS'#$0A
+dispstr 'API_35_4 START'#$0A
+
+sendln 'lteapi dtchnet'
+wait '[API_OK] lte_detach_network return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] dtchnet_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi strplcltm NULL'
+wait '[API_OK] lte_set_report_localtime return val : "0"' '[API_NG]'
+call check_fail
+
+timeout=30
+
+sendln 'lteapi atchnet'
+wait '[API_OK] lte_attach_network return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] atchnet_cb result : "0"' '[CB_NG]'
+call check_fail
+
+wait '[CB_VAL] lcltmrepo_cb time'
+if result!=0 then
+    dispstr 'send finish command'#$0A
+    sendln 'lteapi fin'
+    dispstr 'API_STRPLCLTM_TEST FAILURE'#$0A
+    call error_output
+    closett
+    end
+endif
+
+dispstr 'API_35_4 SUCCESS'#$0A
+
+
+sendln 'lteapi fin'
+
+dispstr 'API_STRPLCLTM_TEST SUCCESS'#$0A
+closett
+end
+; +-------Sub routine ----------------------------------------+
+
+:check_fail
+if result!=1 then
+    dispstr 'API_STRPLCLTM_TEST FAILURE'#$0A
+    dispstr 'send finish command'#$0A
+    sendln 'lteapi fin'
+    call error_output
+    closett
+    end
+endif
+return
+
+:error_output
+tz="GMT"
+getdate DEBUG_LOG_NAME '..\..\log\api_strplcltm_%Y%m%d%H%M%S.error'
+fileopen file DEBUG_LOG_NAME 1
+if -1==file then
+    messagebox 'File open failed!!' 'Error'
+    goto exit
+endif
+
+filewriteln file 'THIS Test is ERROR. Please check the log.'
+
+return

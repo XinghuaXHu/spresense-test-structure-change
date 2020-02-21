@@ -1,0 +1,356 @@
+; +------- Configurable variable ------------------------------+
+
+; +------------------------------------------------------------+
+
+include '..\comport.ttl'
+
+; +------- Variable -------------------------------------------+
+
+; +------- Batch Config----------------------------------------+
+
+;; ②ログファイル名の設定（ログフィルのフルパス）
+;;;; ②−１、保存パスを取得
+getdir DIR
+dirname FULLPATH DIR
+;;;; ②−２、ログファイル名を指定
+getdate LOG_NAME '..\..\log\COMB_13_%Y%m%d%H%M%S.log'
+;;;; ②−３、フルパス完成（合体）
+strconcat FULLPATH LOG_NAME
+ 
+;; ③port接続コマンド作成
+COMMAND = '/C=' 
+strconcat COMMAND COM_PORT 
+strconcat COMMAND ' /BAUD=' 
+strconcat COMMAND BAUDRATE
+ 
+;; ④サーバ接続
+connect COMMAND
+
+logclose
+logopen FULLPATH 0 1 0 1
+
+; +------- Main routine ---------------------------------------+
+setdebug 0
+setsync 1
+
+timeout=60
+
+pause 2
+
+sendln 'lteapi init'
+wait '[API_OK] lte_initialize return val : "0"' '[API_NG]'
+call check_fail
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+sendln 'lteapi atchnet'
+wait '[API_OK] lte_attach_network return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] atchnet_cb result : "0"' '[CB_NG]'
+call check_fail
+
+dispstr 'COMB_13_1 START'#$0A
+
+dispstr 'API_20_4 START'#$0A
+dispstr 'CB_20_1 START'#$0A
+
+send 'lteapi stpinenb LTE_PIN_ENABLE '
+sendln DEFAULTPIN
+
+wait '[API_OK] lte_set_pinenable return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] stpnenbl_cb result : "0"' '[CB_NG]'
+call check_fail
+
+dispstr 'API_20_4 SUCCESS'#$0A
+dispstr 'CB_20_1 SUCCESS'#$0A
+
+dispstr 'API_19_4 START'#$0A
+dispstr 'CB_19_1 START'#$0A
+dispstr 'CB_19_3 START'#$0A
+dispstr 'CB_19_5 START'#$0A
+dispstr 'CB_19_6 START'#$0A
+dispstr 'CB_19_7 START'#$0A
+dispstr 'CB_19_8 START'#$0A
+dispstr 'CB_19_9 START'#$0A
+
+sendln 'lteapi gtpinst'
+wait '[API_OK] lte_get_pinset return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] gtpinst_cb result : "0"' '[CB_NG]'
+call check_fail
+wait '[CB_VAL] gtpinst_cb enable            : "1"'
+call check_fail
+wait '[CB_VAL] gtpinst_cb status            : "0"'
+call check_fail
+wait '[CB_VAL] gtpinst_cb pin_attemptsleft  : '
+call check_fail
+wait '[CB_VAL] gtpinst_cb puk_attemptsleft  : '
+call check_fail
+wait '[CB_VAL] gtpinst_cb pin2_attemptsleft : '
+call check_fail
+wait '[CB_VAL] gtpinst_cb puk2_attemptsleft : '
+call check_fail
+
+dispstr 'API_19_4 SUCCESS'#$0A
+dispstr 'CB_19_1 SUCCESS'#$0A
+dispstr 'CB_19_3 SUCCESS'#$0A
+dispstr 'CB_19_5 SUCCESS'#$0A
+dispstr 'CB_19_6 SUCCESS'#$0A
+dispstr 'CB_19_7 SUCCESS'#$0A
+dispstr 'CB_19_8 SUCCESS'#$0A
+dispstr 'CB_19_9 SUCCESS'#$0A
+
+dispstr 'COMB_13_1 SUCCESS'#$0A
+dispstr 'COMB_13_2 START'#$0A
+
+sendln 'lteapi pwroff'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwroff_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+dispstr 'CB_5_2 START'#$0A
+dispstr 'CB_5_4 START'#$0A
+
+sendln 'lteapi atchnet'
+wait '[API_OK] lte_attach_network return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_NG] atchnet_cb result : "1"' '[CB_OK]'
+call check_fail
+wait '[CB_NG] atchnet_cb error : "1"'
+call check_fail
+
+dispstr 'CB_5_2 SUCCESS'#$0A
+dispstr 'CB_5_4 SUCCESS'#$0A
+
+dispstr 'COMB_13_2 SUCCESS'#$0A
+dispstr 'COMB_13_3 START'#$0A
+
+dispstr 'API_19_3 START'#$0A
+
+sendln 'lteapi gtpinst'
+wait '[API_OK] lte_get_pinset return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] gtpinst_cb result : "0"' '[CB_NG]'
+call check_fail
+wait '[CB_VAL] gtpinst_cb enable            : "1"'
+call check_fail
+wait '[CB_VAL] gtpinst_cb status            : "1"'
+call check_fail
+wait '[CB_VAL] gtpinst_cb pin_attemptsleft  : '
+call check_fail
+wait '[CB_VAL] gtpinst_cb puk_attemptsleft  : '
+call check_fail
+wait '[CB_VAL] gtpinst_cb pin2_attemptsleft : '
+call check_fail
+wait '[CB_VAL] gtpinst_cb puk2_attemptsleft : '
+call check_fail
+
+dispstr 'API_19_3 SUCCESS'#$0A
+
+dispstr 'COMB_13_3 SUCCESS'#$0A
+dispstr 'COMB_13_4 START'#$0A
+
+dispstr 'API_22_3 START'#$0A
+dispstr 'CB_22_1 START'#$0A
+dispstr 'CB_22_3 START'#$0A
+
+send 'lteapi entpin '
+send DEFAULTPIN
+send ' '
+sendln DEFAULTPIN
+
+wait '[API_OK] lte_enter_pin return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] entpin_cb result : "0"' '[CB_NG]'
+call check_fail
+wait '[CB_VAL] entpin_cb pinstat : "0"'
+call check_fail
+
+dispstr 'API_22_3 SUCCESS'#$0A
+dispstr 'CB_22_1 SUCCESS'#$0A
+dispstr 'CB_22_3 SUCCESS'#$0A
+
+dispstr 'COMB_13_4 SUCCESS'#$0A
+dispstr 'COMB_13_5 START'#$0A
+
+sendln 'lteapi atchnet'
+wait '[API_OK] lte_attach_network return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] atchnet_cb result : "0"' '[CB_NG]'
+call check_fail
+
+dispstr 'COMB_13_5 SUCCESS'#$0A
+dispstr 'COMB_13_6 START'#$0A
+
+dispstr 'API_21_4 START'#$0A
+dispstr 'CB_21_1 START'#$0A
+
+send 'lteapi cngpin LTE_TARGET_PIN '
+send DEFAULTPIN
+send ' '
+sendln CHANGEPIN
+
+wait '[API_OK] lte_change_pin return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] cngpin_cb result : "0"' '[CB_NG]'
+call check_fail
+
+dispstr 'API_21_4 SUCCESS'#$0A
+dispstr 'CB_21_1 SUCCESS'#$0A
+
+dispstr 'COMB_13_6 SUCCESS'#$0A
+dispstr 'COMB_13_7 START'#$0A
+
+sendln 'lteapi pwroff'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwroff_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi atchnet'
+wait '[API_OK] lte_attach_network return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_NG] atchnet_cb result : "1"' '[CB_OK]'
+call check_fail
+wait '[CB_NG] atchnet_cb error : "1"'
+call check_fail
+
+dispstr 'COMB_13_7 SUCCESS'#$0A
+dispstr 'COMB_13_8 START'#$0A
+
+send 'lteapi entpin '
+send CHANGEPIN
+send ' '
+sendln CHANGEPIN
+
+wait '[API_OK] lte_enter_pin return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] entpin_cb result : "0"' '[CB_NG]'
+call check_fail
+wait '[CB_VAL] entpin_cb pinstat : "0"'
+call check_fail
+
+dispstr 'COMB_13_8 SUCCESS'#$0A
+dispstr 'COMB_13_9 START'#$0A
+
+sendln 'lteapi atchnet'
+wait '[API_OK] lte_attach_network return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] atchnet_cb result : "0"' '[CB_NG]'
+call check_fail
+
+dispstr 'COMB_13_9 SUCCESS'#$0A
+dispstr 'COMB_13_10 START'#$0A
+
+send 'lteapi stpinenb LTE_PIN_DISABLE '
+sendln CHANGEPIN
+
+wait '[API_OK] lte_set_pinenable return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] stpnenbl_cb result : "0"' '[CB_NG]'
+call check_fail
+
+dispstr 'CB_19_4 START'#$0A
+
+sendln 'lteapi gtpinst'
+wait '[API_OK] lte_get_pinset return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] gtpinst_cb result : "0"' '[CB_NG]'
+call check_fail
+wait '[CB_VAL] gtpinst_cb enable            : "0"'
+call check_fail
+
+
+dispstr 'CB_19_4 SUCCESS'#$0A
+
+dispstr 'COMB_13_10 SUCCESS'#$0A
+dispstr 'COMB_13_11 START'#$0A
+
+sendln 'lteapi pwroff'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwroff_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi pwron'
+wait '[API_OK] lte_power_control return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] pwron_cb result : "0"' '[CB_NG]'
+call check_fail
+
+sendln 'lteapi atchnet'
+wait '[API_OK] lte_attach_network return val : "0"' '[API_NG]'
+call check_fail
+wait '[CB_OK] atchnet_cb result : "0"' '[CB_NG]'
+call check_fail
+
+dispstr 'COMB_13_11 SUCCESS'#$0A
+
+dispstr 'COMB_13_TEST SUCCESS'#$0A
+
+dispstr '----PINSET_UNDO_PROCESS----'#$0A
+
+send 'lteapi stpinenb LTE_PIN_ENABLE '
+sendln CHANGEPIN
+
+wait '[API_OK]'
+wait '[CB_OK]'
+
+send 'lteapi cngpin LTE_TARGET_PIN '
+send CHANGEPIN
+send ' '
+sendln DEFAULTPIN
+
+wait '[API_OK]'
+wait '[CB_OK]'
+
+send 'lteapi stpinenb LTE_PIN_DISABLE '
+sendln DEFAULTPIN
+wait '[API_OK]'
+wait '[CB_OK]'
+
+sendln 'lteapi fin'
+closett
+
+end
+; +-------Sub routine ----------------------------------------+
+
+:check_fail
+if result!=1 then
+    dispstr 'send finish command'#$0A
+    sendln 'lteapi fin'
+    dispstr 'COMB_13_TEST FAILURE'#$0A
+    call error_output
+    closett
+    end
+endif
+return
+
+:error_output
+tz="GMT"
+getdate DEBUG_LOG_NAME '..\..\log\comb_13_%Y%m%d%H%M%S.error'
+fileopen file DEBUG_LOG_NAME 1
+if -1==file then
+    messagebox 'File open failed!!' 'Error'
+    goto exit
+endif
+
+filewriteln file 'THIS Test is ERROR. Please check the log.'
+
+return

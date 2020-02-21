@@ -1,0 +1,16 @@
+sendln "player SetPlayerMode"
+sendln "dbg level AS I"
+sendln '#####  Play-IncDec-Stop  #####'
+sendln "player PlayMusic"
+pause 2
+sendln '#####   IncVol 1‰ñ   #####'
+sendln "player IncVol"
+sendln '#####   IncVol 2‰ñ   #####'
+sendln "player IncVol"
+sendln '#####   DecVol 1‰ñ   #####'
+sendln "player DecVol"
+sendln '#####   DecVol 2‰ñ   #####'
+sendln "player DecVol"
+pause 2
+sendln "player StopMusic"
+

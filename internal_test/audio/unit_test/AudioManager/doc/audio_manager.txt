@@ -1,0 +1,21 @@
+本ファイルでは、audio manager単体検証環境固有の事項について記述します。
+ディレクトリ構成、実行方法等はreadme.txtを参照ください。
+
+
+■プロダクトコードについて
+以下の修正を行う必要があります。
+
+Src/Release/HAPS/audio/manager/audio_manager.cpp
+　AudioManager::run()内の無限ループをコメントアウト(ループの中身を1回だけ実行して抜けるように)する
+
+Src/Release/HAPS/audio/manager/audio_manager.h
+　AudioManager class内のprivate宣言をコメントアウト
+
+
+■現状ステータス
+プロダクトコードはrev 5851に対応
+
+テスト実行すると、環境動作確認用のパタンが実行され
+OK (6 tests, 6 ran, 5574 checks, 0 ignored, 0 filtered out, 3 ms)
+となります。
+

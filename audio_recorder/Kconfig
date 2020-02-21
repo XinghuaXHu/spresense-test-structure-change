@@ -1,0 +1,34 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config TEST_AUDIO_RECORDER
+    bool "Audio recorder test"
+    default n
+
+if TEST_AUDIO_RECORDER
+
+config TEST_AUDIO_RECORDER_APP_NAME
+	string "Application name"
+	default "recorder"
+	
+config TEST_AUDIO_RECORDER_PROGNAME
+	string "Program name"
+	default "audio_recorder"
+
+config TEST_AUDIO_RECORDER_PRIORITY
+	int "Audio recorder task priority"
+	default 100
+
+config TEST_AUDIO_RECORDER_STACKSIZE
+	int "Audio recorder stack size"
+	default 2048
+
+config TEST_AUDIO_RECORDER_FILE_MOUNTPT
+	string "recording file mount path"
+	default "/mnt/sd0/REC"
+	---help---
+		The path to the recording file mount point. Default: /mnt/vfat/REC
+
+endif
