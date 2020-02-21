@@ -28,8 +28,8 @@ class HelloTestTcRunner(TestRunner):
     def __init__(self, conf, **kwargs):
         super(HelloTestTcRunner, self).__init__(conf)
 
-        self.device1 = HelloTestDevice(
-            kwargs.get('device1', None), 'HELLO_TEST_DEVICE') if kwargs.get('device1', None)\
+        self.dut_device = HelloTestDevice(
+            kwargs.get('dut_device', None), 'HELLO_TEST_DEVICE') if kwargs.get('dut_device', None)\
             else None
 
         if not all(self.get_devices_list()):
@@ -38,7 +38,7 @@ class HelloTestTcRunner(TestRunner):
         self.writer_path = os.path.join(self.config.projects[0].path, 'test/autotest/src/api/updater.py')
 
     def get_devices_list(self):
-        return [self.device1]
+        return [self.dut_device]
 
     def generate_test_groups(self, arguments, log=None):
         timeout = 10
@@ -97,10 +97,10 @@ if __name__ == "__main__":
     dev_manager = DeviceManager(config)
 
     # Assign devices according to role
-    device1 = dev_manager.get_devices_by_serials(args.dut_device)[0]
+    dut_device = dev_manager.get_devices_by_serials(args.dut_device)[0]
 
     # Create test runner instance
-    tc_runner = HelloTestTcRunner(config, device1=device1)
+    tc_runner = HelloTestTcRunner(config, dut_device=dut_device)
 
     # Configure logger
     logger = TestLogger(log_name=tc_runner.name, console_debug=args.verbose)

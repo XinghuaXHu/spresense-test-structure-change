@@ -1,6 +1,6 @@
 {
  "testsw":
    {
-     "dut_port":{"build_path": "examples/hello"}
+     "dut_port":{"build_path": ["examples/hello"]}
    }
 }
