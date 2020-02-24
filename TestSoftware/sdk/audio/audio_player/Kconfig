@@ -1,0 +1,24 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config SQA_TEST_AUDIO_PLAYER
+    bool "Audio player test"
+    default n
+
+if SQA_TEST_AUDIO_PLAYER
+
+config SQA_TEST_AUDIO_PLAYER_FILE_MOUNTPT
+	string "play file mount path"
+	default "/mnt/sd0/AUDIO"
+	---help---
+		The path to the play file mount point. Default: /mnt/sd0/AUDIO
+
+config SQA_TEST_AUDIO_PLAYER_USE_SUBPLAYER
+    bool "Use subplayer" 
+    default y
+    ---help---
+        Use subplayer or not
+
+endif

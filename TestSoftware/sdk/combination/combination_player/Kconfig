@@ -1,0 +1,86 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config COMBINATION_PLAYER
+	bool "Combination of audioPlayer, Gnss, Led, Camera and Multicpu"
+	default n
+	---help---
+		Enable the Combination of audioPlayer, Gnss, Led, Camera and Multicpu
+
+if COMBINATION_PLAYER
+
+config COMBINATION_PLAYER_WORKER_STACKSIZE
+    int "Example worker stack size"
+    default 2048
+
+config EXAMPLES_SENSOR_STEP_COUNTER_ACCEL_WM_SIGNO
+    int "Accelerator sensor watermark signal"
+    default 14
+
+choice
+    prompt "player and step selection"
+    default COMBI_SET_PLAY_W_STEP
+    ---help---
+        Set the compile option of player or step.
+
+config COMBI_SET_PLAY_ONLY
+    bool "COMBI_SET_PLAY_ONLY"
+
+config COMBI_SET_STEP_ONLY
+    bool "COMBI_SET_STEP_ONLY"
+
+config COMBI_SET_PLAY_W_STEP
+    bool "COMBI_SET_PLAY_W_STEP"
+endchoice
+
+config COMBI_SET_LTE
+    bool "COMBI_SET_LTE"
+    default n
+
+config COMBI_SET_LED
+    bool "COMBI_SET_LED"
+    default n
+
+config COMBI_SET_GNSS
+    bool "COMBI_SET_GNSS"
+    default n
+
+config COMBI_SET_AUDIO
+    bool "COMBI_SET_AUDIO"
+    default n
+
+config COMBI_SET_VIDEO
+    bool "COMBI_SET_VIDEO"
+    default n
+
+config COMBI_SET_CAMERA
+    bool "COMBI_SET_CAMERA"
+    default n
+
+config COMBI_SET_ASMP
+    bool "COMBI_SET_ASMP"
+    default n
+
+config COMBI_SET_DECODE
+    bool "COMBI_SET_DECODE"
+    default n
+
+config COMBI_SET_STEP
+    bool "COMBI_SET_STEP"
+    default n
+
+config COMBI_SET_FLASH
+    bool "COMBI_SET_FLASH"
+    default n
+
+config COMBI_SET_FAT
+    bool "COMBI_SET_FAT"
+    default n
+
+config EXAMPLES_JPEG_DECODE_OUTPUT_LCD
+    bool "EXAMPLES_JPEG_DECODE_OUTPUT_LCD"
+    default n
+
+endif

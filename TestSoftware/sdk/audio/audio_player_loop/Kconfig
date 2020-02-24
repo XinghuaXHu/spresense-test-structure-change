@@ -1,0 +1,11 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config SQA_TEST_AUDIO_PLAYER_LOOP
+	bool "Audio player loop test"
+	default n
+	depends on CXD56_AUDIO
+	---help---
+		Enable the audio player loop test

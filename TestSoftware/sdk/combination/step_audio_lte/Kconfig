@@ -1,0 +1,36 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config TEST_SENSOR_STEP_COUNTER
+	bool "Step counter and Audio and LTE combination test"
+	default n
+	select NETUTILS_JSON
+	select NETUTILS_HTTPC
+	---help---
+		Enable the step_counter sensor example
+
+if TEST_SENSOR_STEP_COUNTER
+
+config TEST_STEP_COUNTER_PROGNAME
+	string "Program name"
+	default "step_counter"
+	depends on BUILD_KERNEL
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config TEST_STEP_COUNTER_PRIORITY
+	int "Sensor task priority"
+	default 100
+
+config TEST_STEP_COUNTER_STACKSIZE
+	int "Sensor stack size"
+	default 4096
+
+config TEST_SENSOR_STEP_COUNTER_ACCEL_WM_SIGNO
+    int "Accelerator sensor watermark signal"
+    default 14
+
+endif

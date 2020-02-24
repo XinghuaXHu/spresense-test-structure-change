@@ -1,0 +1,9 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config TEST_MULTICPU
+	bool "Resource sharing test between CPUs using ASMP"
+	default n
+

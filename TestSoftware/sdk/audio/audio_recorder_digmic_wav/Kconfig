@@ -1,0 +1,26 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config SQA_TEST_AUDIO_RECORDER_DIGMIC_WAV
+	bool "Audio recorder test (digital mic wav)"
+	default n
+	depends on CXD56_AUDIO
+	---help---
+		Enable the audio player example
+
+if SQA_TEST_AUDIO_RECORDER_DIGMIC_WAV
+
+config SQA_TEST_AUDIO_RECORDER_DIGMIC_WAV_PROGNAME
+	string "Program name"
+	default "audio_recorder_digmic_wav"
+
+config SQA_TEST_AUDIO_RECORDER_DIGMIC_WAV_PRIORITY
+	int "Audio recorder task priority"
+	default 100
+
+config SQA_TEST_AUDIO_RECORDER_DIGMIC_WAV_STACKSIZE
+	int "Audio recorder stack size"
+	default 2048
+endif

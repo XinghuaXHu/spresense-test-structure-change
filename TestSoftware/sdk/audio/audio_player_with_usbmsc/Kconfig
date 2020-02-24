@@ -1,0 +1,11 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config SQA_TEST_AUDIO_PLAYER_WITH_USBMSC
+	bool "Audio player with usbmsc"
+	default n
+	depends on CXD56_AUDIO
+	---help---
+		Enable the audio player with usbmsc

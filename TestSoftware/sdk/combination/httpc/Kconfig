@@ -1,0 +1,29 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+menuconfig NETUTILS_HTTPC
+	bool "HTTP client support"
+	default n
+	select NET_LWIP
+	---help---
+		Enable or Disable HTTP client feature
+
+if NETUTILS_HTTPC
+config NETUTILS_HTTPC_ROOTCA_USE_FILE
+	bool "Use root CA certificate file in mbedTLS certification"
+	default n
+	depends on NETUTILS_MBEDTLS
+	---help---
+		In case NETUTILS_HTTPC_ROOTCA_USE_FILE=n, this application use the root CA
+		 certificate information on memory(defined in rootca_certs.c) in mbedTLS certification.
+
+if NETUTILS_HTTPC_ROOTCA_USE_FILE
+config NETUTILS_HTTPC_ROOTCA_FILE
+	string "root CA file path in mbedTLS certification"
+	default "/mnt/spif/GeoTrust.crt"
+	---help---
+		Need to put the root CA file to NETUTILS_HTTPC_ROOTCA_FILE path.
+endif
+endif

@@ -1,0 +1,31 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config PMIC_TEST
+	bool "PMIC power monitor example"
+	default n
+	depends on CXD56_PMIC
+	---help---
+		Enable the PMIC power monitor example
+
+if PMIC_TEST
+
+config PMIC_TEST_PROGNAME
+	string "Program name"
+	default "pmic"
+	depends on BUILD_KERNEL
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config PMIC_TEST_PRIORITY
+	int "pmic task priority"
+	default 100
+
+config PMIC_TEST_STACKSIZE
+	int "pmic stack size"
+	default 2048
+
+endif

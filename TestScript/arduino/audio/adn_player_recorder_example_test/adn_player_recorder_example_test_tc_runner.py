@@ -541,10 +541,10 @@ class AdnPlayerRecorderExampleTestTcRunner(TestRunner):
     def __init__(self, conf, **kwargs):
         super(AdnPlayerRecorderExampleTestTcRunner, self).__init__(conf)
 
-        self.dut_device = PlayerDevice(kwargs.get('dut_device', None), 'PLAYER_DEVICE') \
-            if kwargs.get('dut_device', None) else None
-        self.peer_device = RecorderDevice(kwargs.get('peer_device', None), 'RECORDER_DEVICE') \
-            if kwargs.get('peer_device', None) else None
+        self.player = PlayerDevice(kwargs.get('player', None), 'PLAYER_DEVICE') \
+            if kwargs.get('player', None) else None
+        self.recorder = RecorderDevice(kwargs.get('recorder', None), 'RECORDER_DEVICE') \
+            if kwargs.get('recorder', None) else None
 
         if not all(self.get_devices_list()):
             raise TesterException('At least two devices are needed!')
@@ -565,7 +565,7 @@ class AdnPlayerRecorderExampleTestTcRunner(TestRunner):
         # self.recorder_test_defconfig = os.path.join(os.path.dirname(__file__), RECORDER_TEST_DEFCONFIG)
 
     def get_devices_list(self):
-        return [self.dut_device, self.peer_device]
+        return [self.player, self.recorder]
 
     def generate_test_groups(self, arguments, log=None):
         timeout = 600
@@ -1013,6 +1013,10 @@ class AdnPlayerRecorderExampleTestTcRunner(TestRunner):
 
 if __name__ == "__main__":
     parser = RunnerParser()
+    parser.add_argument('--player_bin', help='Player binary file path')
+    parser.add_argument('--recorder_bin', help='Recorder binary file path')
+    parser.add_argument('--player', metavar='SERIAL_PORT', help='Set player')
+    parser.add_argument('--recorder', metavar='SERIAL_PORT', help='Set recorder')
     parser.add_argument('--player_fs_ready', action='store_true',
                         help='Player folders and files already created')
     parser.add_argument('--recorder_fs_ready', action='store_true',
@@ -1033,10 +1037,10 @@ if __name__ == "__main__":
     dev_manager = DeviceManager(config)
 
     # Assign devices according to role
-    player, recorder = dev_manager.get_devices_by_serials(args.dut_device, args.peer_device)
+    player, recorder = dev_manager.get_devices_by_serials(args.player, args.recorder)
 
     # Create test runner instance
-    tc_runner = AdnPlayerRecorderExampleTestTcRunner(config, dut_device=player, peer_device=recorder)
+    tc_runner = AdnPlayerRecorderExampleTestTcRunner(config, player=player, recorder=recorder)
 
     # Configure logger
     logger = TestLogger(log_name=tc_runner.name, console_debug=args.verbose)

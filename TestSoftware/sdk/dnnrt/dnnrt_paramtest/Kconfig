@@ -1,0 +1,31 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config EXAMPLES_DNNRT_PARAMTEST
+	bool "dnnrt example of pramtest using LeNet-5"
+    depends on DNN_RT
+	default n
+	---help---
+		classify MNIST digits by LeNet-5
+
+if EXAMPLES_DNNRT_PARAMTEST
+
+config EXAMPLES_DNNRT_PARAMTEST_PROGNAME
+	string "Program name"
+	default "dnnrt_paramtest"
+	depends on BUILD_KERNEL
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config EXAMPLES_DNNRT_PARAMTEST_PRIORITY
+	int "dnnrt_paramtest task priority"
+	default 100
+
+config EXAMPLES_DNNRT_PARAMTEST_STACKSIZE
+	int "dnnrt_paramtest stack size"
+	default 2048
+
+endif

@@ -1,0 +1,35 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config TEST_PMTEST
+	bool "Power management example"
+	default n
+	---help---
+		Enable the power management example
+
+if TEST_PMTEST
+
+config TEST_PMTEST_AUTO_LAUNCH
+	bool "Auto launch"
+	default n
+	depends on !BUILD_PROTECTED && !BUILD_KERNEL
+
+config TEST_PMTEST_PROGNAME
+	string "Program name"
+	default "pmtest"
+	depends on BUILD_KERNEL
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config TEST_PMTEST_PRIORITY
+	int "pmtest task priority"
+	default 100
+
+config TEST_PMTEST_STACKSIZE
+	int "pmtest stack size"
+	default 2048
+
+endif

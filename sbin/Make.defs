@@ -1,4 +1,0 @@
-
-ifeq ($(CONFIG_TEST_SBIN),y)
-CONFIGURED_APPS += sbin
-endif

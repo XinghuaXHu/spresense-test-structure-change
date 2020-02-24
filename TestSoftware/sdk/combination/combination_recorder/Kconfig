@@ -1,0 +1,82 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config COMBINATION_RECORDER
+	bool "Combination of audioRecorder, Gnss, Led, Camera and Multicpu"
+	default n
+	---help---
+		Enable the Combination of audioRecorder, Gnss, Led, Camera and Multicpu
+
+if COMBINATION_RECORDER
+
+config COMBINATION_RECORDER_WORKER_STACKSIZE
+    int "Example worker stack size"
+    default 2048
+
+config EXAMPLES_SENSOR_STEP_COUNTER_ACCEL_WM_SIGNO
+    int "Accelerator sensor watermark signal"
+    default 14
+
+choice
+    prompt "recorder and step selection"
+    default COMBI_SET_REC_W_STEP
+    ---help---
+        Set the compile option of recorder or step.
+
+config COMBI_SET_REC_W_STEP
+    bool "REC_W_STEP"
+
+config COMBI_SET_REC_ONLY
+    bool "REC_ONLY"
+
+config COMBI_SET_STEPCNT_ONLY
+    bool "STEP_ONLY"
+endchoice
+
+config COMBI_SET_LTE
+    bool "lte"
+    default n
+
+config COMBI_SET_LED
+    bool "led"
+    default n
+
+config COMBI_SET_GNSS
+    bool "gnss"
+    default n
+
+config COMBI_SET_AUDIO
+    bool "audio"
+    default y
+
+config COMBI_SET_VIDEO
+    bool "video"
+    default n
+
+config COMBI_SET_CAMERA
+    bool "camera"
+    default n
+
+config COMBI_SET_ASMP
+    bool "asmp"
+    default n
+
+config COMBI_SET_DECODE
+    bool "decode"
+    default n
+
+config COMBI_SET_STEP
+    bool "step"
+    default n
+
+config COMBI_SET_FLASH
+    bool "flash"
+    default n
+
+config COMBI_SET_FAT
+    bool "fat"
+    default n
+
+endif

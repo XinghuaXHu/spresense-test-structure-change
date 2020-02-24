@@ -1,0 +1,8 @@
+############################################################################
+# test/sqa/singlefunction/gnss_extension_test/Make.defs
+#
+############################################################################
+
+ifeq ($(CONFIG_EXAMPLES_GNSS_EXTENSION_TEST),y)
+CONFIGURED_APPS += TestSoftware/sdk/gnss/gnss_extension_test
+endif

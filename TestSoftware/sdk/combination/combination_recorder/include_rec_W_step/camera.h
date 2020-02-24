@@ -1,0 +1,2 @@
+int camera(void);
+

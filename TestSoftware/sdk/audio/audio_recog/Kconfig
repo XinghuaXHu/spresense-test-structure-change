@@ -1,0 +1,31 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config SQAT_AUDIO_RECOG
+	bool "Audio recognizer example"
+	default n
+	depends on CXD56_AUDIO
+	---help---
+		Enable the audio recognizer example
+
+if SQAT_AUDIO_RECOG
+
+config SQAT_AUDIO_RECOG_PROGNAME
+	string "Program name"
+	default "audio_recognizer"
+
+config SQAT_AUDIO_RECOG_PRIORITY
+	int "Audio recognizer task priority"
+	default 100
+
+config SQAT_AUDIO_RECOG_STACKSIZE
+	int "Audio recognizer stack size"
+	default 2048
+
+config SQAT_AUDIO_RECOG_USEPREPROC
+	bool "Use pre process at Frontend"
+	default n
+
+endif

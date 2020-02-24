@@ -1,0 +1,17 @@
+#RTOS Features 
+# [*] Enable priority inheritance   ---> 
+#
+#RTOS Features > Pthread Options
+#	[*] Enable mutex types           
+#	[*] pthread cleanup stack    
+#
+#File Systems --
+#     [*] Named semaphore support  
+
+
+CONFIG_EXAMPLES_OSTEST=y
+CONFIG_EXAMPLES_OSTEST_LOOPS=1
+CONFIG_EXAMPLES_OSTEST_STACKSIZE=8192
+CONFIG_EXAMPLES_OSTEST_NBARRIER_THREADS=8
+CONFIG_EXAMPLES_OSTEST_RR_RANGE=10000
+CONFIG_EXAMPLES_OSTEST_RR_RUNS=10

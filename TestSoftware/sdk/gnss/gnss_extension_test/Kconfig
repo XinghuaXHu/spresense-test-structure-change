@@ -1,0 +1,43 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config EXAMPLES_GNSS_EXTENSION_TEST
+	bool "GNSS_EXTENSION_TEST positioning example"
+	default n
+  depends on CXD56_GNSS
+	---help---
+		Enable the Simple GNSS positioning example
+
+if EXAMPLES_GNSS_EXTENSION_TEST
+
+config EXAMPLES_GNSS_EXTENSION_TEST_PROGNAME
+	string "Program name"
+	default "gnss_extension"
+	depends on BUILD_KERNEL
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config EXAMPLES_GNSS_EXTENSION_TEST_PRIORITY
+	int "GNSS task priority"
+	default 100
+
+config EXAMPLES_GNSS_EXTENSION_TEST_STACKSIZE
+	int "GNSS stack size"
+	default 81920
+
+choice
+	prompt "Event notification"
+	default EXAMPLES_GNSS_EXTENSION_TEST_USE_POLL
+
+config EXAMPLES_GNSS_EXTENSION_TEST_USE_POLL
+	bool "Polling notifycation"
+
+config EXAMPLES_GNSS_EXTENSION_TEST_USE_SIGNAL
+	bool "Signal notifycation"
+
+endchoice # Event notification
+
+endif

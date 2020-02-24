@@ -1,0 +1,102 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config DEMO_COLLET_TRACKER
+	bool "collet tracker demo"
+	default n
+#	select LTE
+#	select LTE_CLIENT
+#	select EXTNETUTILS
+#	select EXTNETUTILS_JSON
+        select NETUTILS_JSON
+	select NETUTILS_HTTPC
+#	select NETUTILS_MBEDTLS
+	select LIBC_FLOATINGPOINT
+#	select SENSORS
+#	select BMP280
+#	select AK09912
+#	select BMI160
+	select MEMUTILS
+	select MEMUTILS_MEMORY_MANAGER
+	select MEMUTILS_MESSAGE
+#	select SENSING_MANAGER
+#	select SENSING_TRAM
+#	select SENSING_BAROMETER
+	select CXD56_SCU
+	select CXD56_GNSS
+
+if DEMO_COLLET_TRACKER
+
+config DEMO_COLLET_TRACKER_PROGNAME
+	string "Program name"
+	default "collet_tracker"
+	depends on BUILD_KERNEL
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config DEMO_COLLET_TRACKER_PRIORITY
+	int "collet tracker task priority"
+	default 100
+
+config DEMO_COLLET_TRACKER_STACKSIZE
+	int "collet tracker stack size"
+	default 5120
+
+config DEMO_COLLET_TRACKER_HTTP_CUSTOM_HEADER_NUM
+	int "Max number of custom headers"
+	default 5
+
+config DEMO_COLLET_TRACKER_USING_NXFB
+	bool "Using NX graphics with frame buffer"
+	default y
+
+config DEMO_COLLET_TRACKER_ACCEL_TM_SIGNO
+	int "Accelerator sensor's inner timer signal"
+	default 15
+
+config DEMO_COLLET_TRACKER_ACCEL_WM_SIGNO
+	int "Accelerator sensor signal for waterMark"
+	default 14
+    
+config DEMO_COLLET_TRACKER_ACCEL_EV_SIGNO
+	int "Accelerator sensor signal for event"
+	default 13
+
+config DEMO_COLLET_TRACKER_MAG_SIGNO
+	int "Magnetometer sensor signal"
+	default 12
+    
+config DEMO_COLLET_TRACKER_PRESS_SIGNO
+	int "Pressure sensor signal"
+	default 11
+    
+config DEMO_COLLET_TRACKER_TEMP_SIGNO
+	int "Temperature sensor signal"
+	default 10
+
+config DEMO_COLLET_TRACKER_DEBUG_FEATURES
+	bool "Enable Debug Features for tracker demo application"
+	default n
+
+if DEMO_COLLET_TRACKER_DEBUG_FEATURES
+
+config DEMO_COLLET_TRACKER_DEBUG_ERROR
+	bool "Enable Error Output"
+	default n
+
+config DEMO_COLLET_TRACKER_DEBUG_WARN
+	bool "Enable Warnigs Output"
+	default n
+	depends on DEMO_COLLET_TRACKER_DEBUG_ERROR
+
+config DEMO_COLLET_TRACKER_DEBUG_INFO
+	bool "Enable Infomation Debug Output"
+	default n
+	depends on DEMO_COLLET_TRACKER_DEBUG_WARN
+
+endif # DEMO_COLLET_TRACKER_DEBUG_FEATURES
+endif # DEMO_COLLET_TRACKER
+

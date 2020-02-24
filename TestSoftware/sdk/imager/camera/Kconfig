@@ -1,0 +1,38 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config SQA_CAMERA
+	bool "Camera example"
+	default n
+	---help---
+		Enable the camera example
+
+if SQA_CAMERA
+
+config SQA_CAMERA_PROGNAME
+	string "Program name"
+	default "camera"
+	depends on BUILD_KERNEL
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config SQA_CAMERA_PRIORITY
+	int "Camera task priority"
+	default 100
+
+config SQA_CAMERA_STACKSIZE
+	int "Camera stack size"
+	default 2048
+
+config BUFNUM_TEST
+	bool "Camera buffer num"
+	default n
+
+config BUFNUM_NORMAL
+	bool "Camera buffer num"
+	default y
+
+endif

@@ -1,0 +1,26 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config SQA_TEST_AUDIO_RECORDER_1_2_1
+	bool "Audio recorder example 1.2.1"
+	default n
+	depends on CXD56_AUDIO
+	---help---
+		Enable the audio player example
+
+if SQA_TEST_AUDIO_RECORDER_1_2_1
+
+config SQA_TEST_AUDIO_RECORDER_PROGNAME_1_2_1
+	string "Program name"
+	default "audio_recorder"
+
+config SQA_TEST_AUDIO_RECORDER_PRIORITY_1_2_1
+	int "Audio recorder task priority"
+	default 100
+
+config SQA_TEST_AUDIO_RECORDER_STACKSIZE_1_2_1
+	int "Audio recorder stack size"
+	default 2048
+endif

@@ -131,6 +131,7 @@ class TestRunner(object):
         if os.path.exists(filepath) != True:
             log.info('No testscript.json file ')
             return
+        
         json_data=open(filepath,encoding='utf-8')
         data=json.load(json_data)
         if data != None:
@@ -149,8 +150,10 @@ class TestRunner(object):
                    num+=1
                    binaries = self.build(debug, log, device_data, build_bin, device) 
                    self.flash_n_check(device, binaries, log, device_data['appscheck'] if 'appscheck' in device_data.keys() else None )
+           else:
+                raise TesterException('testsw no data')
         else:
-            log.info('testscript.json file no data')
+            raise TesterException('testscript.json file no data')
             return
 
     # noinspection PyUnresolvedReferences
@@ -168,11 +171,12 @@ class TestRunner(object):
             log.info('Building {}'.format(device))
             apps_path = []
             defconfig_path = None
-            if 'examples' == device_data['build_path'][0].split('/')[0]:
-                apps_path.append(device_data['build_path'][0]) 
-            else:
-                defconfig_path = os.path.join(os.getcwd(),TESTSW_PATH,device_data['build_path'][0])
-                apps_path.append(defconfig_path.split('/')[-1].split('-')[0]) 
+            for defconfig in device_data['build_path']:
+                if 'examples' == defconfig.split('/')[0]:
+                    apps_path.append(defconfig) 
+                elif 'defconfig' == defconfig.split('/')[-1].split('-')[-1]:
+                    defconfig_path = os.path.join(os.getcwd(),TESTSW_PATH,defconfig)
+                    apps_path.append(defconfig_path.split('/')[-1].split('-')[0]) 
 
             build_bin = self.__build_binary(toolbox, apps_path, device,defconfig_path)
 

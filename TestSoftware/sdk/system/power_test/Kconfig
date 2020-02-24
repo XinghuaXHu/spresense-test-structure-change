@@ -1,0 +1,38 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config POWER_TEST
+	bool "Power test"
+	default n
+	---help---
+		Enable the power test
+
+if POWER_TEST
+
+config POWER_TEST_PROGNAME
+	string "Program name"
+	default "power_test"
+	depends on BUILD_KERNEL
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config POWER_TEST_PRIORITY
+	int "power_test task priority"
+	default 100
+
+config POWER_TEST_STACKSIZE
+	int "power_test stack size"
+	default 2048
+
+config TEST_MAX_TILE_NUM
+	int "Max tile test num"
+	default 8
+
+config POWER_TEST_SLEEP_TIME
+	int "Power test sleep time"
+	default 2
+
+endif

@@ -1,0 +1,30 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config EXAMPLES_HELLO
+	bool "Fat test example"
+	default n
+	---help---
+		Enable the Fat test example
+
+if EXAMPLES_FAT
+
+config EXAMPLES_FAT_PROGNAME
+	string "Program name"
+	default "fat"
+	depends on BUILD_KERNEL
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config EXAMPLES_FAT_PRIORITY
+	int "fat task priority"
+	default 100
+
+config EXAMPLES_FAT_STACKSIZE
+	int "Hello stack size"
+	default 2048
+
+endif

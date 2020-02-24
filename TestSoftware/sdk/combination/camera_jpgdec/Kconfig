@@ -1,0 +1,41 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config TEST_CAMERA_JPGDEC
+	bool "Test camera and jpegdecoder"
+	default n
+	---help---
+		Enable the test camera and jpegdecoder
+
+if TEST_CAMERA_JPGDEC
+
+config TEST_CAMERA_JPGDEC_PROGNAME
+	string "Program name"
+	default "camera_jpgdec"
+	depends on BUILD_KERNEL
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config TEST_CAMERA_JPGDEC_PRIORITY
+	int "Camera task priority"
+	default 100
+
+config TEST_CAMERA_JPGDEC_STACKSIZE
+	int "Camera stack size"
+	default 5120
+
+config TEST_JPEG_DECODE_OUTPUT_LCD
+	bool "Output LCD"
+	default y
+
+config TEST_CAMERA_JPGDEC_INFINITE
+	bool "Capture image infinite"
+	depends on TEST_CAMERA_JPGDEC_OUTPUT_LCD
+	---help---
+		Capturing images in infinite loop. If this option is enabled, then
+		example never been stopped.
+
+endif

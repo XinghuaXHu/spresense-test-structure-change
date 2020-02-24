@@ -1,0 +1,25 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config TEST_AUDIO_GNSS
+	bool "AUDIO and GNSS combination test"
+	default n
+	select FS_NAMED_SEMAPHORES
+	select SYSLOG_TIMESTAMP
+	select LIBC_STRERROR
+	select LIBM
+	select LIB_ASMP
+	select HAVE_CXX
+	select HAVE_CXXINITIALIZE
+	select CXD56_AUDIO
+	select AUDIOUTILS_FEATURE
+	select AUDIOUTILS_PLAYER
+	select CXD56_GNSS
+	select TEST_COMMON_UTILS
+	select TEST_COMMON_GNSS
+	select TEST_COMMON_AUDIO
+	---help---
+		Enable the AUDIO and GNSS combination test
+

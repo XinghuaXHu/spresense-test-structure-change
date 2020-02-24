@@ -1,0 +1,361 @@
+Archive member included to satisfy reference by file (symbol)
+
+../lib/libasmpw.a(common.o)   sectest.o (wk_exit)
+../lib/libasmpw.a(mpmq.o)     sectest.o (mpmq_init)
+../lib/libasmpw.a(mpmutex.o)  sectest.o (mpmutex_init)
+../lib/libasmpw.a(mpshm.o)    sectest.o (mpshm_init)
+../lib/libasmpw.a(cpufifo.o)  ../lib/libasmpw.a(mpmq.o) (cpufifo_push)
+../lib/libasmpw.a(cpuid.o)    ../lib/libasmpw.a(mpmq.o) (asmp_getglobalcpuid)
+../lib/libasmpw.a(startup.o)  (__vectors)
+../lib/libasmpw.a(sysctl.o)   ../lib/libasmpw.a(mpshm.o) (sysctl)
+../lib/libasmpw.a(exception.o)
+                              ../lib/libasmpw.a(startup.o) (exception_common)
+../lib/libasmpw.a(doirq.o)    ../lib/libasmpw.a(exception.o) (up_doirq)
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+
+.text           0x00000000      0xa8c
+                0x00000000                _stext = .
+ *(.vectors)
+ .vectors       0x00000000      0x240 ../lib/libasmpw.a(startup.o)
+                0x00000000                __vectors
+ *(.text)
+ .text          0x00000240        0x0 sectest.o
+ .text          0x00000240       0x48 ../lib/libasmpw.a(common.o)
+                0x00000240                wk_memset
+                0x00000250                wk_exit
+                0x00000260                asmp_findmpbindobj
+ .text          0x00000288       0xf4 ../lib/libasmpw.a(mpmq.o)
+                0x00000288                mpmq_init
+                0x000002d6                mpmq_destroy
+                0x000002e4                mpmq_send
+                0x00000314                mpmq_timedsend
+                0x00000344                mpmq_receive
+                0x00000360                mpmq_timedreceive
+ .text          0x0000037c       0xbc ../lib/libasmpw.a(mpmutex.o)
+                0x0000037c                mpmutex_init
+                0x000003b6                mpmutex_destroy
+                0x000003c6                mpmutex_trylock
+                0x0000040a                mpmutex_lock
+                0x0000041c                mpmutex_unlock
+ .text          0x00000438      0x1e4 ../lib/libasmpw.a(mpshm.o)
+                0x0000044c                mpshm_init
+                0x00000494                mpshm_destroy
+                0x000004aa                mpshm_control
+                0x000004b0                mpshm_virt2phys
+                0x000004f0                mpshm_attach
+                0x000005a0                mpshm_detach
+                0x000005e2                mpshm_phys2virt
+ .text          0x0000061c       0xb8 ../lib/libasmpw.a(cpufifo.o)
+                0x0000061c                cpufifo_push
+                0x00000644                cpufifo_pull
+                0x000006b4                _signal
+ .text          0x000006d4       0x1c ../lib/libasmpw.a(cpuid.o)
+                0x000006d4                asmp_getglobalcpuid
+                0x000006e0                asmp_getlocalcpuid
+ .text          0x000006f0       0x70 ../lib/libasmpw.a(startup.o)
+                0x0000075c                __debug_start
+ .text          0x00000760       0x34 ../lib/libasmpw.a(sysctl.o)
+                0x00000760                sysctl
+ .text          0x00000794       0x84 ../lib/libasmpw.a(exception.o)
+                0x00000794                exception_common
+ .text          0x00000818       0x56 ../lib/libasmpw.a(doirq.o)
+                0x00000818                up_doirq
+                0x0000081c                write_pin
+                0x00000856                alarmled
+ *(.text.*)
+ *fill*         0x0000086e        0x2 
+ .text.startup  0x00000870      0x21c sectest.o
+                0x00000870                main
+ *(.gnu.warning)
+ *(.stub)
+ *(.glue_7)
+ .glue_7        0x00000a8c        0x0 linker stubs
+ *(.glue_7t)
+ .glue_7t       0x00000a8c        0x0 linker stubs
+ *(.jcr)
+ *(.gnu.linkonce.t.*)
+ *(.init)
+ *(.fini)
+                0x00000a8c                _etext = .
+
+.vfp11_veneer   0x00000a8c        0x0
+ .vfp11_veneer  0x00000a8c        0x0 linker stubs
+
+.v4_bx          0x00000a8c        0x0
+ .v4_bx         0x00000a8c        0x0 linker stubs
+
+.iplt           0x00000a8c        0x0
+ .iplt          0x00000a8c        0x0 sectest.o
+
+.ARM.extab
+ *(.ARM.extab*)
+
+.ARM.exidx
+ *(.ARM.exidx*)
+
+.rodata         0x00000a8c       0x80
+                0x00000a8c                _srodata = .
+ *(.rodata)
+ .rodata        0x00000a8c       0x80 ../lib/libasmpw.a(common.o)
+                0x00000a8c                mpframework_reserved
+ *(.rodata1)
+ *(.rodata.*)
+ *(.gnu.linkonce.r*)
+                0x00000b0c                _erodata = .
+
+.rel.dyn        0x00000b0c        0x0
+ .rel.iplt      0x00000b0c        0x0 sectest.o
+
+.data           0x00000b0c    0x19010
+                0x00000b0c                _sdata = .
+ *(.data)
+ .data          0x00000b0c    0x19010 sectest.o
+                0x00000b0c                dummydata
+ .data          0x00019b1c        0x0 ../lib/libasmpw.a(common.o)
+ .data          0x00019b1c        0x0 ../lib/libasmpw.a(mpmq.o)
+ .data          0x00019b1c        0x0 ../lib/libasmpw.a(mpmutex.o)
+ .data          0x00019b1c        0x0 ../lib/libasmpw.a(mpshm.o)
+ .data          0x00019b1c        0x0 ../lib/libasmpw.a(cpufifo.o)
+ .data          0x00019b1c        0x0 ../lib/libasmpw.a(cpuid.o)
+ .data          0x00019b1c        0x0 ../lib/libasmpw.a(startup.o)
+ .data          0x00019b1c        0x0 ../lib/libasmpw.a(sysctl.o)
+ .data          0x00019b1c        0x0 ../lib/libasmpw.a(exception.o)
+ .data          0x00019b1c        0x0 ../lib/libasmpw.a(doirq.o)
+ *(.data1)
+ *(.data.*)
+ *(.gnu.linkonce.d*)
+                0x00019b1c                _edata = .
+
+.igot.plt       0x00019b1c        0x0
+ .igot.plt      0x00019b1c        0x0 sectest.o
+
+.ctors          0x00019b1c        0x0
+                0x00019b1c                _sctors = .
+ *(.ctors)
+ *(.init_array)
+                0x00019b1c                _ectors = .
+
+.dtors          0x00019b1c        0x0
+                0x00019b1c                _sdtors = .
+ *(.dtors)
+ *(.fini_array)
+                0x00019b1c                _edtors = .
+
+.rel.plt
+ *(.rel.plt)
+
+.bss            0x00019c00      0x900
+                0x00019c00                _sbss = .
+ *(.bss)
+ .bss           0x00019c00        0x1 sectest.o
+                0x00019c00                wptr
+ .bss           0x00019c01        0x0 ../lib/libasmpw.a(common.o)
+ .bss           0x00019c01        0x0 ../lib/libasmpw.a(mpmq.o)
+ .bss           0x00019c01        0x0 ../lib/libasmpw.a(mpmutex.o)
+ .bss           0x00019c01        0x0 ../lib/libasmpw.a(mpshm.o)
+ *fill*         0x00019c01        0x3 
+ .bss           0x00019c04       0x18 ../lib/libasmpw.a(cpufifo.o)
+ .bss           0x00019c1c        0x0 ../lib/libasmpw.a(cpuid.o)
+ .bss           0x00019c1c        0x0 ../lib/libasmpw.a(startup.o)
+ .bss           0x00019c1c        0x0 ../lib/libasmpw.a(sysctl.o)
+ *fill*         0x00019c1c       0xe4 
+ .bss           0x00019d00      0x800 ../lib/libasmpw.a(exception.o)
+                0x00019d00                g_intstackalloc
+                0x0001a500                g_intstackbase
+ .bss           0x0001a500        0x0 ../lib/libasmpw.a(doirq.o)
+ *(.bss.*)
+ *(.sbss)
+ *(.sbss.*)
+ *(.gnu.linkonce.b*)
+ *(COMMON)
+                0x0001a500                _ebss = ALIGN (0x4)
+                0x0001a900                __stack_pointer = (. + STACK_SIZE)
+                0x0001a900                __stack = __stack_pointer
+
+.stab
+ *(.stab)
+
+.stabstr
+ *(.stabstr)
+
+.stab.excl
+ *(.stab.excl)
+
+.stab.exclstr
+ *(.stab.exclstr)
+
+.stab.index
+ *(.stab.index)
+
+.stab.indexstr
+ *(.stab.indexstr)
+
+.comment        0x00000000       0x6e
+ *(.comment)
+ .comment       0x00000000       0x6e sectest.o
+                                 0x6f (size before relaxing)
+ .comment       0x0000006e       0x6f ../lib/libasmpw.a(common.o)
+ .comment       0x0000006e       0x6f ../lib/libasmpw.a(mpmq.o)
+ .comment       0x0000006e       0x6f ../lib/libasmpw.a(mpmutex.o)
+ .comment       0x0000006e       0x6f ../lib/libasmpw.a(mpshm.o)
+ .comment       0x0000006e       0x6f ../lib/libasmpw.a(cpufifo.o)
+ .comment       0x0000006e       0x6f ../lib/libasmpw.a(cpuid.o)
+ .comment       0x0000006e       0x6f ../lib/libasmpw.a(startup.o)
+ .comment       0x0000006e       0x6f ../lib/libasmpw.a(sysctl.o)
+ .comment       0x0000006e       0x6f ../lib/libasmpw.a(doirq.o)
+
+.ARM.attributes
+                0x00000000       0x37
+ .ARM.attributes
+                0x00000000       0x39 sectest.o
+ .ARM.attributes
+                0x00000039       0x39 ../lib/libasmpw.a(common.o)
+ .ARM.attributes
+                0x00000072       0x39 ../lib/libasmpw.a(mpmq.o)
+ .ARM.attributes
+                0x000000ab       0x39 ../lib/libasmpw.a(mpmutex.o)
+ .ARM.attributes
+                0x000000e4       0x39 ../lib/libasmpw.a(mpshm.o)
+ .ARM.attributes
+                0x0000011d       0x39 ../lib/libasmpw.a(cpufifo.o)
+ .ARM.attributes
+                0x00000156       0x39 ../lib/libasmpw.a(cpuid.o)
+ .ARM.attributes
+                0x0000018f       0x39 ../lib/libasmpw.a(startup.o)
+ .ARM.attributes
+                0x000001c8       0x39 ../lib/libasmpw.a(sysctl.o)
+ .ARM.attributes
+                0x00000201       0x25 ../lib/libasmpw.a(exception.o)
+ .ARM.attributes
+                0x00000226       0x39 ../lib/libasmpw.a(doirq.o)
+
+.debug_abbrev   0x00000000      0xde2
+ *(.debug_abbrev)
+ .debug_abbrev  0x00000000      0x15e sectest.o
+ .debug_abbrev  0x0000015e      0x150 ../lib/libasmpw.a(common.o)
+ .debug_abbrev  0x000002ae      0x15d ../lib/libasmpw.a(mpmq.o)
+ .debug_abbrev  0x0000040b      0x106 ../lib/libasmpw.a(mpmutex.o)
+ .debug_abbrev  0x00000511      0x2bf ../lib/libasmpw.a(mpshm.o)
+ .debug_abbrev  0x000007d0      0x102 ../lib/libasmpw.a(cpufifo.o)
+ .debug_abbrev  0x000008d2       0x83 ../lib/libasmpw.a(cpuid.o)
+ .debug_abbrev  0x00000955      0x1e9 ../lib/libasmpw.a(startup.o)
+ .debug_abbrev  0x00000b3e      0x13a ../lib/libasmpw.a(sysctl.o)
+ .debug_abbrev  0x00000c78       0x14 ../lib/libasmpw.a(exception.o)
+ .debug_abbrev  0x00000c8c      0x156 ../lib/libasmpw.a(doirq.o)
+
+.debug_info     0x00000000     0x258e
+ *(.debug_info)
+ .debug_info    0x00000000      0x6bd sectest.o
+ .debug_info    0x000006bd      0x25e ../lib/libasmpw.a(common.o)
+ .debug_info    0x0000091b      0x537 ../lib/libasmpw.a(mpmq.o)
+ .debug_info    0x00000e52      0x340 ../lib/libasmpw.a(mpmutex.o)
+ .debug_info    0x00001192      0xa1c ../lib/libasmpw.a(mpshm.o)
+ .debug_info    0x00001bae      0x20c ../lib/libasmpw.a(cpufifo.o)
+ .debug_info    0x00001dba       0xf7 ../lib/libasmpw.a(cpuid.o)
+ .debug_info    0x00001eb1      0x2c0 ../lib/libasmpw.a(startup.o)
+ .debug_info    0x00002171      0x1be ../lib/libasmpw.a(sysctl.o)
+ .debug_info    0x0000232f       0x90 ../lib/libasmpw.a(exception.o)
+ .debug_info    0x000023bf      0x1cf ../lib/libasmpw.a(doirq.o)
+
+.debug_line     0x00000000     0x13fc
+ *(.debug_line)
+ .debug_line    0x00000000      0x358 sectest.o
+ .debug_line    0x00000358      0x1ed ../lib/libasmpw.a(common.o)
+ .debug_line    0x00000545      0x24e ../lib/libasmpw.a(mpmq.o)
+ .debug_line    0x00000793      0x224 ../lib/libasmpw.a(mpmutex.o)
+ .debug_line    0x000009b7      0x347 ../lib/libasmpw.a(mpshm.o)
+ .debug_line    0x00000cfe      0x139 ../lib/libasmpw.a(cpufifo.o)
+ .debug_line    0x00000e37      0x15f ../lib/libasmpw.a(cpuid.o)
+ .debug_line    0x00000f96      0x1c5 ../lib/libasmpw.a(startup.o)
+ .debug_line    0x0000115b      0x11e ../lib/libasmpw.a(sysctl.o)
+ .debug_line    0x00001279       0x77 ../lib/libasmpw.a(exception.o)
+ .debug_line    0x000012f0      0x10c ../lib/libasmpw.a(doirq.o)
+
+.debug_pubnames
+ *(.debug_pubnames)
+
+.debug_aranges  0x00000000      0x160
+ *(.debug_aranges)
+ .debug_aranges
+                0x00000000       0x20 sectest.o
+ .debug_aranges
+                0x00000020       0x20 ../lib/libasmpw.a(common.o)
+ .debug_aranges
+                0x00000040       0x20 ../lib/libasmpw.a(mpmq.o)
+ .debug_aranges
+                0x00000060       0x20 ../lib/libasmpw.a(mpmutex.o)
+ .debug_aranges
+                0x00000080       0x20 ../lib/libasmpw.a(mpshm.o)
+ .debug_aranges
+                0x000000a0       0x20 ../lib/libasmpw.a(cpufifo.o)
+ .debug_aranges
+                0x000000c0       0x20 ../lib/libasmpw.a(cpuid.o)
+ .debug_aranges
+                0x000000e0       0x20 ../lib/libasmpw.a(startup.o)
+ .debug_aranges
+                0x00000100       0x20 ../lib/libasmpw.a(sysctl.o)
+ .debug_aranges
+                0x00000120       0x20 ../lib/libasmpw.a(exception.o)
+ .debug_aranges
+                0x00000140       0x20 ../lib/libasmpw.a(doirq.o)
+                0x00000400                STACK_SIZE = 0x400
+LOAD sectest.o
+LOAD ../lib/libasmpw.a
+OUTPUT(sectest elf32-littlearm)
+
+.debug_loc      0x00000000     0x100b
+ .debug_loc     0x00000000       0xeb sectest.o
+ .debug_loc     0x000000eb      0x125 ../lib/libasmpw.a(common.o)
+ .debug_loc     0x00000210      0x2ab ../lib/libasmpw.a(mpmq.o)
+ .debug_loc     0x000004bb      0x1b2 ../lib/libasmpw.a(mpmutex.o)
+ .debug_loc     0x0000066d      0x661 ../lib/libasmpw.a(mpshm.o)
+ .debug_loc     0x00000cce      0x18f ../lib/libasmpw.a(cpufifo.o)
+ .debug_loc     0x00000e5d       0x98 ../lib/libasmpw.a(startup.o)
+ .debug_loc     0x00000ef5       0x6c ../lib/libasmpw.a(sysctl.o)
+ .debug_loc     0x00000f61       0xaa ../lib/libasmpw.a(doirq.o)
+
+.debug_ranges   0x00000000       0x80
+ .debug_ranges  0x00000000       0x10 sectest.o
+ .debug_ranges  0x00000010       0x58 ../lib/libasmpw.a(mpshm.o)
+ .debug_ranges  0x00000068       0x18 ../lib/libasmpw.a(startup.o)
+
+.debug_str      0x00000000      0x7c3
+ .debug_str     0x00000000      0x341 sectest.o
+                                0x3b4 (size before relaxing)
+ .debug_str     0x00000341      0x18b ../lib/libasmpw.a(common.o)
+                                0x293 (size before relaxing)
+ .debug_str     0x000004cc       0x87 ../lib/libasmpw.a(mpmq.o)
+                                0x33a (size before relaxing)
+ .debug_str     0x00000553       0x2a ../lib/libasmpw.a(mpmutex.o)
+                                0x2e3 (size before relaxing)
+ .debug_str     0x0000057d      0x126 ../lib/libasmpw.a(mpshm.o)
+                                0x44c (size before relaxing)
+ .debug_str     0x000006a3       0x3e ../lib/libasmpw.a(cpufifo.o)
+                                0x25d (size before relaxing)
+ .debug_str     0x000006e1        0xd ../lib/libasmpw.a(cpuid.o)
+                                0x21c (size before relaxing)
+ .debug_str     0x000006ee       0x94 ../lib/libasmpw.a(startup.o)
+                                0x29c (size before relaxing)
+ .debug_str     0x00000782        0xe ../lib/libasmpw.a(sysctl.o)
+                                0x228 (size before relaxing)
+ .debug_str     0x00000790       0x33 ../lib/libasmpw.a(doirq.o)
+                                0x220 (size before relaxing)
+
+.debug_frame    0x00000000      0x3cc
+ .debug_frame   0x00000000       0x34 sectest.o
+ .debug_frame   0x00000034       0x54 ../lib/libasmpw.a(common.o)
+ .debug_frame   0x00000088       0xac ../lib/libasmpw.a(mpmq.o)
+ .debug_frame   0x00000134       0x7c ../lib/libasmpw.a(mpmutex.o)
+ .debug_frame   0x000001b0       0xec ../lib/libasmpw.a(mpshm.o)
+ .debug_frame   0x0000029c       0x54 ../lib/libasmpw.a(cpufifo.o)
+ .debug_frame   0x000002f0       0x30 ../lib/libasmpw.a(cpuid.o)
+ .debug_frame   0x00000320       0x3c ../lib/libasmpw.a(startup.o)
+ .debug_frame   0x0000035c       0x28 ../lib/libasmpw.a(sysctl.o)
+ .debug_frame   0x00000384       0x48 ../lib/libasmpw.a(doirq.o)

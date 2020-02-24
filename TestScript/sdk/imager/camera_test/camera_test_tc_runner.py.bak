@@ -1,0 +1,1488 @@
+#! /usr/bin/env python3
+import sys
+import os
+import time
+import datetime
+
+SCRIPT_PATH = os.path.dirname(__file__)
+API_PATH = os.path.realpath(os.path.join(SCRIPT_PATH, "..", ".."))
+
+sys.path.append(API_PATH)
+from api.device_manager import DeviceManager
+from api.tester_exception import TesterException
+from tc.camera_test.camera_test_device import CameraTestDevice
+from api.utils import Toolbox
+from api.runner import TestRunner, Tag
+from api.test import Test, Step, Action, TestGroup, TestLogger
+from api.config import Config
+from api.runner_parser import RunnerParser
+
+
+PROJECT = 'spresense'
+APPS_TO_BUILTIN = ['camera']
+
+
+# noinspection PyUnusedLocal
+def dut_reboot_monitor(test, source, data):
+    if source.NUTTSHELL in data:
+        test.set_fail(' '.join(['Unexpected', str(source), 'reboot!']))
+
+def wait_sec(test, source, data, sec, description):
+    if description is not None:
+        test.log.info("")
+        test.log.info("#############################################")
+        test.log.info("## [" + str(sec) + " sec] "+ description)
+        test.log.info("#############################################")
+        test.log.info("")
+    time.sleep(sec)
+    test.add_user_event(source, 'wait sec completed')
+
+def store_still_file_path(test, source, data):
+    test.storage.still_file_path.append(data.get_value(source.KEY_FILE_PATH))
+    return True
+
+def mkdir_still(test, source, data):
+    test.storage.still_file_path = []
+#    test.storage.still_dirname = '{}-{}'.format(datetime.datetime.now().strftime("%Y%m%d%H%M%S"), test.name)
+    test.storage.still_dirname = '{}-{}'.format(datetime.datetime.now().strftime("%m%d%H%M%S"), test.name)
+    time.sleep(5)
+    source.write('mkdir /mnt/sd0/{}'.format(test.storage.still_dirname))
+    time.sleep(2)
+
+def mv_still_file(test, source, data):
+    for path in test.storage.still_file_path:
+        target = '{}/{}'.format(os.path.dirname(path), test.storage.still_dirname)
+        source.write('mv {} {}/{}'.format(path, target, os.path.basename(path)))
+        time.sleep(2)
+    test.storage.still_file_path.clear()
+
+class CameraTestTcRunner(TestRunner):
+
+    def __init__(self, conf, **kwargs):
+        super(CameraTestTcRunner, self).__init__(conf)
+
+        self.camera_test_device = CameraTestDevice(
+            kwargs.get('dut_device', None), 'CAMERA_TEST_DEVICE') if kwargs.get('dut_device', None)\
+            else None
+
+        if not all(self.get_devices_list()):
+            raise TesterException('At least one device is needed!')
+
+        self.writer_path = os.path.join(self.config.projects[0].path, 'test/autotest/src/api/updater.py')
+        self.defconfig_path = os.path.join(os.getcwd(), 'defconfig/camera-defconfig')
+
+    def get_devices_list(self):
+        return [self.camera_test_device]
+
+    def setup(self, arguments, log=None):
+        debug = not arguments.release
+        binaries = dict(dut_bin=None, bac_bin=None)
+
+        binaries['dut_bin'] = os.path.normpath(arguments.dut_bin) if arguments.dut_bin else None
+
+        binaries = self.build(debug, log, **binaries)
+
+        self.flash_n_check(self.camera_test_device, binaries['dut_bin'], log)
+
+    # noinspection PyUnresolvedReferences
+    def build(self, debug=True, log=None, **kwargs):
+        dut_bin = kwargs.get('dut_bin', None)
+        toolbox = None
+
+        if not all([dut_bin]):
+            if log:
+                log.info('Building project sources')
+
+            toolbox = Toolbox(self.config, log)
+            toolbox.init_builder_module()
+
+        if not dut_bin:
+            dut_bin = self.__build_binary(toolbox, self.defconfig_path, self.camera_test_device)
+
+        return dict(dut_bin=dut_bin)
+
+    @staticmethod
+    def __build_binary(toolbox, defconfig, device):
+        bin_file = toolbox.builder.build_project(PROJECT, APPS_TO_BUILTIN, device, defconfig)
+        return os.path.normpath(bin_file)
+
+    # noinspection PyMethodMayBeStatic
+    def flash_n_check(self, device, dut_bin, log=None):
+        if log:
+            log.info('Flashing ' + str(device))
+
+        device.flash(str(device), log, dut_bin)
+        device.check_device_config(str(device), APPS_TO_BUILTIN, log)
+
+        if os.path.basename(dut_bin).startswith(str(device)):
+            try:
+                os.remove(dut_bin)
+            except OSError as e:
+                log.error(e)
+                raise
+
+    def generate_test_groups(self, arguments, log=None):
+        timeout = 180
+
+        camera_test_device = self.get_devices_list()[0]
+
+        def videostart_steps(width=320, height=240, fps=120):
+            return [
+                Step(Action.WRITE, camera_test_device, 'camera videostart {} {} {}'.format(width, height, fps)),
+                Step(Action.WAIT_FOR, camera_test_device, 'test_vidioc_s_param'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 5, 'Video start {}x{} fps={}'.format(width, height, fps))),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+            ]
+
+        def still_loop_steps(cmd, width=1920, height=1080, count=1, fps=15):
+            r = []
+            r = r + [
+                Step(Action.WRITE, camera_test_device, 'camera {} {} {} {} {}'.format(cmd, width, height, count, fps)),
+            ]
+            for i in range(count):
+                r.append(
+                    Step(Action.WAIT_FOR, camera_test_device, camera_test_device.STILL_DATA,
+                         lambda test, source, data: store_still_file_path(test, source, data)),
+                )
+            r = r + [
+                Step(Action.WAIT_FOR, camera_test_device, 'Confirmation'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: mv_still_file(test, source, data)),
+            ]
+            return r
+
+        def yuv_jpeg_loop_steps(cmd, jpeg_width, jpeg_height, yuv_width, yuv_height, count, fps):
+            r = []
+            r = r + [
+                Step(Action.WRITE, camera_test_device, 'camera {} {} {} {} {} {} {}'.format(cmd, jpeg_width, jpeg_height, yuv_width, yuv_height, count, fps)),
+            ]
+            for i in range(count):
+                r.append(
+                    Step(Action.WAIT_FOR, camera_test_device, camera_test_device.STILL_DATA,
+                         lambda test, source, data: store_still_file_path(test, source, data)),
+                )
+            r = r + [
+                Step(Action.WAIT_FOR, camera_test_device, 'Still Confirmation'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: mv_still_file(test, source, data)),
+            ]
+            return r
+
+        def loop_steps(count, steps):
+            r = []
+            for i in range(count):
+                r = r + steps
+            return r
+
+        def cam_cmd_steps(cmd, value_list, wait_time=0, ok_str=None, still=False):
+            r = []
+            for value in value_list:
+                r = r + [
+                    Step(Action.WRITE, camera_test_device, 'camera {} {}'.format(cmd, value)),
+                ]
+                if ok_str is not None:
+                    r = r + [
+                        Step(Action.WAIT_FOR, camera_test_device, ok_str),
+                    ]
+                if wait_time > 0:
+                    r = r + [
+                        Step(Action.EXECUTE, camera_test_device, None,
+                            lambda test, source, data, val=value: wait_sec(test, source, data, wait_time, 'cmd : {} / value : {}'.format(cmd, val))),
+                    ]
+                if still == True:
+                    r = r + still_loop_steps("still")
+            return r
+
+        setup = [
+            Step(Action.WAIT_FOR, camera_test_device, camera_test_device.NSH_PROMPT),
+            Step(Action.WRITE, camera_test_device, 'reboot'),
+            Step(Action.WAIT_FOR, camera_test_device, camera_test_device.NUTTSHELL),
+        ]
+
+        setup_mkdir_still = [
+            Step(Action.EXECUTE, camera_test_device, None,
+                 lambda test, source, data: mkdir_still(test, source, data)),
+        ]
+
+        teardown = [
+        ]
+
+        capture_01  = Test(
+            name='capture_01',
+            timeout=timeout,
+            setup=setup,
+            test=videostart_steps(320, 240, 120),
+            teardown=teardown
+        )
+
+        capture_02 = Test(
+            name='capture_02',
+            timeout=timeout,
+            setup=setup,
+            test=videostart_steps(480, 360, 60),
+            teardown=teardown
+        )
+
+        capture_03 = Test(
+            name='capture_03',
+            timeout=timeout,
+            setup=setup,
+            test=videostart_steps(96, 64, 120),
+            teardown=teardown
+        )
+
+        image_quality_01 = Test(
+            name='image_quality_01',
+            timeout=timeout,
+            setup=setup + setup_mkdir_still + videostart_steps(),
+            test=cam_cmd_steps("brightness", [ "-128", "0", "127" ], 3, "ioctl calling", True),
+            teardown=teardown
+        )
+
+        image_quality_02 = Test(
+            name='image_quality_02',
+            timeout=timeout,
+            setup=setup + setup_mkdir_still + videostart_steps(),
+            test=cam_cmd_steps("contrast", [ "0", "127", "255" ], 3, "ioctl calling", True),
+            teardown=teardown
+        )
+
+        image_quality_03 = Test(
+            name='image_quality_03',
+            timeout=timeout,
+            setup=setup + setup_mkdir_still + videostart_steps(),
+            test=cam_cmd_steps("saturation", [ "0", "127", "255" ], 3, "ioctl calling", True),
+            teardown=teardown
+        )
+
+        image_quality_04 = Test(
+            name='image_quality_04',
+            timeout=timeout,
+            setup=setup + setup_mkdir_still + videostart_steps(),
+            test=cam_cmd_steps("hue", [ "0", "127", "255" ], 3, "ioctl calling", True),
+            teardown=teardown
+        )
+
+        image_quality_05 = Test(
+            name='image_quality_05',
+            timeout=timeout,
+            setup=setup + setup_mkdir_still + videostart_steps(),
+            test=cam_cmd_steps("awb", [ "0", "1" ], 10, "ioctl calling", True),
+            teardown=teardown
+        )
+
+        image_quality_06 = Test(
+            name='image_quality_06',
+            timeout=timeout,
+            setup=setup + setup_mkdir_still + videostart_steps(),
+            test=cam_cmd_steps("redbalance", [ "0", "32768", "65535" ], 5, "ioctl calling", True),
+            teardown=teardown
+        )
+
+        image_quality_07 = Test(
+            name='image_quality_07',
+            timeout=timeout,
+            setup=setup + setup_mkdir_still + videostart_steps(),
+            test=cam_cmd_steps("bluebalance", [ "0", "32768", "65535" ], 5, "ioctl calling", True),
+            teardown=teardown
+        )
+
+        image_quality_08 = Test(
+            name='image_quality_08',
+            timeout=timeout,
+            setup=setup + setup_mkdir_still + videostart_steps(),
+            test=cam_cmd_steps("gamma", [ "0", "3" ], 5, "gamma change test", True),
+            teardown=teardown
+        )
+
+        image_quality_09 = Test(
+            name='image_quality_09',
+            timeout=timeout,
+            setup=setup + setup_mkdir_still + videostart_steps(),
+            test=cam_cmd_steps("exposure", [ "-6", "0", "6" ], 5, "ioctl calling", True),
+            teardown=teardown
+        )
+
+        image_quality_10 = Test(
+            name='image_quality_10',
+            timeout=timeout,
+            setup=setup + setup_mkdir_still + videostart_steps(),
+            test=cam_cmd_steps("vflip", [ "1", "0" ], 5, "ioctl calling", True),
+            teardown=teardown
+        )
+
+        image_quality_11 = Test(
+            name='image_quality_11',
+            timeout=timeout,
+            setup=setup + setup_mkdir_still + videostart_steps(),
+            test=cam_cmd_steps("hflip", [ "1", "0" ], 5, "ioctl calling", True),
+            teardown=teardown
+        )
+
+        image_quality_12 = Test(
+            name='image_quality_12',
+            timeout=timeout,
+            setup=setup + setup_mkdir_still + videostart_steps(),
+            test=cam_cmd_steps("sharpness", [ "0", "128", "255" ], 5, "ioctl calling", True),
+            teardown=teardown
+        )
+
+        image_quality_13 = Test(
+            name='image_quality_13',
+            timeout=timeout,
+            setup=setup + setup_mkdir_still + videostart_steps(),
+            test=cam_cmd_steps("colorkill", [ "1", "0" ], 5, "ioctl calling", True),
+            teardown=teardown
+        )
+
+        image_quality_14 = Test(
+            name='image_quality_14',
+            timeout=timeout,
+            setup=setup + setup_mkdir_still + videostart_steps(),
+            test=cam_cmd_steps("colorfx", [ "0", "1", "2", "3", "5", "13", "16" ], 5, "ioctl calling", True),
+            teardown=teardown
+        )
+
+        image_quality_15 = Test(
+            name='image_quality_15',
+            timeout=timeout,
+            setup=setup + setup_mkdir_still + videostart_steps(),
+            test=cam_cmd_steps("autoexpo", [ "0", "1" ], 10, "test_vidioc_s_ext_ctrl call", True),
+            teardown=teardown
+        )
+
+        image_quality_16 = Test(
+            name='image_quality_16',
+            timeout=timeout,
+            setup=setup + setup_mkdir_still + videostart_steps(),
+            test=cam_cmd_steps("expoabs", [ "0", "128", "255" ], 10, "test_vidioc_s_ext_ctrl call", True),
+            teardown=teardown
+        )
+
+        image_quality_17 = Test(
+            name='image_quality_17',
+            timeout=timeout,
+            setup=setup + setup_mkdir_still + videostart_steps(),
+            test=cam_cmd_steps("expomete", [ "0", "1", "2", "3" ], 5, "test_vidioc_s_ext_ctrl call", True),
+            teardown=teardown
+        )
+
+        image_quality_18 = Test(
+            name='image_quality_18',
+            timeout=timeout,
+            setup=setup + setup_mkdir_still + videostart_steps(),
+            test=cam_cmd_steps("zoom", [ "0 1", "0 2", "0 4" ], 3, "test_vidioc_s_ext_ctrl call", True),
+            teardown=teardown
+        )
+
+        image_quality_19 = Test(
+            name='image_quality_19',
+            timeout=timeout,
+            setup=setup + setup_mkdir_still + videostart_steps(),
+            test=cam_cmd_steps("zoom", [ "1 1", "1 2", "1 4" ], 3, "test_vidioc_s_ext_ctrl call", True),
+            teardown=teardown
+        )
+
+        image_quality_20 = Test(
+            name='image_quality_20',
+            timeout=timeout,
+            setup=setup + setup_mkdir_still + videostart_steps(),
+            test=cam_cmd_steps("whitebala", [ "1", "2", "3", "6", "8", "9" ], 3, "test_vidioc_s_ext_ctrl call", True),
+            teardown=teardown
+        )
+
+        image_quality_21 = Test(
+            name='image_quality_21',
+            timeout=timeout,
+            setup=setup + setup_mkdir_still + videostart_steps(),
+            test=cam_cmd_steps("wide", [ "1", "0" ], 5, "test_vidioc_s_ext_ctrl call", True),
+            teardown=teardown
+        )
+
+        image_quality_22 = Test(
+            name='image_quality_22',
+            timeout=timeout,
+            setup=setup + setup_mkdir_still + videostart_steps(),
+            test=cam_cmd_steps("iso", [ "25", "800", "1600" ], 5, "test_vidioc_s_ext_ctrl call", True),
+            teardown=teardown
+        )
+
+        image_quality_23 = Test(
+            name='image_quality_23',
+            timeout=timeout,
+            setup=setup + setup_mkdir_still + videostart_steps(),
+            test=cam_cmd_steps("isoauto", [ "0", "1" ], 5, "test_vidioc_s_ext_ctrl call", True),
+            teardown=teardown
+        )
+
+        image_quality_24 = Test(
+            name='image_quality_24',
+            timeout=timeout,
+            setup=setup + setup_mkdir_still + videostart_steps(),
+            test=cam_cmd_steps("3a", [ "1", "0" ], 5, "test_vidioc_s_ext_ctrl call", True),
+            teardown=teardown
+        )
+
+        image_quality_25 = Test(
+            name='image_quality_25',
+            timeout=timeout,
+            setup=setup + setup_mkdir_still,
+            test=cam_cmd_steps("jpg", [ "100" ], 5, "test_vidioc_s_ext_ctrl call", False) + \
+                 still_loop_steps("still", 320, 240, 1, 120) + \
+                 cam_cmd_steps("jpg", [ "90" ], 5, "test_vidioc_s_ext_ctrl call", False) + \
+                 still_loop_steps("still", 320, 240, 1, 120),
+            teardown=teardown
+        )
+
+        image_quality_26 = Test(
+            name='image_quality_26',
+            timeout=timeout,
+            setup=setup,
+            test=cam_cmd_steps("brightness", [ "100" ], 0, "ioctl calling", False) + \
+                 cam_cmd_steps("check", [ "0" ], 0, "brightness: 0", False),
+            teardown=teardown
+        )
+
+        half_shutter_01 = Test(
+            name='half_shutter_01',
+            timeout=timeout,
+            setup=setup + videostart_steps(),
+            test=cam_cmd_steps("af", [ "" ], 5, "ret = 0", False) + \
+                 cam_cmd_steps("afnot", [ "" ], 5, "ret = 0", False),
+            teardown=teardown
+        )
+
+        half_shutter_02 = Test(
+            name='half_shutter_02',
+            timeout=timeout,
+            setup=setup,
+            test=cam_cmd_steps("af", [ "" ], 0, "ret = -1", False) + \
+                 videostart_steps() + \
+                 cam_cmd_steps("streamoff", [ "" ], 2, "stream off", False) + \
+                 cam_cmd_steps("af", [ "" ], 0, "ret = 0", False),
+            teardown=teardown
+        )
+
+        capture_jpeg_01 = Test(
+            name='capture_jpeg_01',
+            timeout=timeout,
+            setup=setup+setup_mkdir_still+videostart_steps(320, 240, 120),
+            test=still_loop_steps("still", 320, 240, 10, 120),
+            teardown=teardown
+        )
+
+        capture_jpeg_02 = Test(
+            name='capture_jpeg_02',
+            timeout=timeout,
+            setup=setup+setup_mkdir_still+videostart_steps(320, 240, 120),
+            test=still_loop_steps("still", 640, 480, 10, 60),
+            teardown=teardown
+        )
+
+        capture_jpeg_03 = Test(
+            name='capture_jpeg_03',
+            timeout=timeout,
+            setup=setup+setup_mkdir_still+videostart_steps(320, 240, 120),
+            test=still_loop_steps("still", 1280, 960, 10, 30),
+            teardown=teardown
+        )
+
+        capture_jpeg_04 = Test(
+            name='capture_jpeg_04',
+            timeout=timeout,
+            setup=setup+setup_mkdir_still+videostart_steps(320, 240, 120),
+            test=still_loop_steps("still", 1280, 960, 10, 30),
+            teardown=teardown
+        )
+
+        capture_jpeg_05 = Test(
+            name='capture_jpeg_05',
+            timeout=timeout,
+            setup=setup+setup_mkdir_still+videostart_steps(320, 240, 120),
+            test=still_loop_steps("still", 2592, 1944, 10, 15),
+            teardown=teardown
+        )
+
+        capture_without_video_01 = Test(
+            name='capture_without_video_01',
+            timeout=timeout,
+            setup=setup+setup_mkdir_still,
+            test=still_loop_steps("still", 320, 240, 1, 120),
+            teardown=teardown
+        )
+
+        capture_without_video_02 = Test(
+            name='capture_without_video_02',
+            timeout=timeout,
+            setup=setup+setup_mkdir_still,
+            test=still_loop_steps("yuv", 320, 240, 1, 120),
+            teardown=teardown
+        )
+
+        capture_without_video_03 = Test(
+            name='capture_without_video_03',
+            timeout=timeout,
+            setup=setup+setup_mkdir_still,
+            test=still_loop_steps("still", 1280, 960, 1, 30) + still_loop_steps("yuv", 400, 240, 1, 30),
+            teardown=teardown
+        )
+
+        capture_yuv_01 = Test(
+            name='cap_yuv_1',
+            timeout=timeout,
+            setup=setup+setup_mkdir_still+videostart_steps(320, 240, 120),
+            test=still_loop_steps("yuv", 320, 240, 10, 120),
+            teardown=teardown
+        )
+
+        capture_yuv_02 = Test(
+            name='capture_yuv_02',
+            timeout=timeout,
+            setup=setup+setup_mkdir_still+videostart_steps(320, 240, 120),
+            test=still_loop_steps("yuv", 480, 360, 10, 60),
+            teardown=teardown
+        )
+
+        capture_yuv_03 = Test(
+            name='capture_yuv_03',
+            timeout=timeout,
+            setup=setup+setup_mkdir_still+videostart_steps(320, 240, 120),
+            test=still_loop_steps("yuv", 96, 64, 10, 120),
+            teardown=teardown
+        )
+
+        capture_yuv_jpeg_01 = Test(
+            name='capture_yuv_jpeg_01',
+            timeout=timeout,
+            setup=setup+setup_mkdir_still+videostart_steps(320, 240, 120),
+            test=yuv_jpeg_loop_steps("sub", 320, 240, 320, 240, 10, 120),
+            teardown=teardown
+        )
+
+        capture_yuv_jpeg_02 = Test(
+            name='capture_yuv_jpeg_02',
+            timeout=timeout,
+            setup=setup+setup_mkdir_still+videostart_steps(320, 240, 120),
+            test=yuv_jpeg_loop_steps("sub", 1280, 960, 400, 240, 10, 30),
+            teardown=teardown
+        )
+
+        mode_transition_01 = Test(
+            name='mode_transition_01',
+            timeout=timeout,
+            setup=setup+setup_mkdir_still+videostart_steps(320, 240, 120),
+            test=loop_steps(5,
+                cam_cmd_steps("brightness", [ "-128", "0", "127" ], 3, "ioctl calling", True)
+                ),
+            teardown=teardown
+        )
+
+        capture_stream_ctrl_01 = Test(
+            name='capture_stream_ctrl_01',
+            timeout=timeout,
+            setup=setup+setup_mkdir_still,
+            test=[
+                Step(Action.WRITE, camera_test_device, 'camera streamon'),
+                Step(Action.WAIT_FOR, camera_test_device, 'stream on'),
+                Step(Action.WAIT_FOR, camera_test_device, 'stream on'),
+            ] + still_loop_steps("still"),
+            teardown=teardown
+        )
+
+        capture_stream_ctrl_03  = Test(
+            name='capture_stream_ctrl_03',
+            timeout=timeout,
+            setup=setup,
+            test=loop_steps(5, [
+                Step(Action.WRITE, camera_test_device, 'camera streamon'),
+                Step(Action.WAIT_FOR, camera_test_device, 'stream on'),
+                Step(Action.WAIT_FOR, camera_test_device, 'stream on'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 3, "Stream ON")),
+                Step(Action.WRITE, camera_test_device, 'camera streamoff'),
+                Step(Action.WAIT_FOR, camera_test_device, 'stream off'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 3, "Stream OFF")),
+            ]),
+            teardown=teardown
+        )
+
+        capture_stream_ctrl_04  = Test(
+            name='capture_stream_ctrl_04',
+            timeout=timeout,
+            setup=setup+setup_mkdir_still,
+            test=[
+                Step(Action.WRITE, camera_test_device, 'camera streamoff'),
+                Step(Action.WAIT_FOR, camera_test_device, 'stream off'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 3, "Stream OFF")),
+            ] + still_loop_steps("stillc"),
+            teardown=teardown
+        )
+
+        cam_deve  = Test(
+            name='cam_deve',
+            timeout=timeout,
+            setup=setup,
+            test=[
+                Step(Action.WRITE, camera_test_device, 'camera device'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 5, "Video start (Default setting)")),
+            ],
+            teardown=teardown
+        )
+
+        get_image_quality_setting_brightness =Test(
+            name='get_image_quality_setting_brightness',
+            timeout=timeout,
+            setup=setup,
+            test=[
+                Step(Action.WRITE, camera_test_device, 'camera videostart'),
+                Step(Action.WAIT_FOR, camera_test_device, 'test_vidioc_s_param'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                    lambda test, source, data: wait_sec(test, source, data, 3, "Video start (Default setting)")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 0'),
+                Step(Action.WAIT_FOR, camera_test_device, 'brightness: 0'),
+                Step(Action.WRITE, camera_test_device, 'camera brightness -128'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                    lambda test, source, data: wait_sec(test, source, data, 3, "Brightness = -128")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 0'),
+                Step(Action.WAIT_FOR, camera_test_device, 'brightness: 128'),
+#                Step(Action.WAIT_FOR, camera_test_device, 'brightness: -128'),
+#は？ばぐかよ…
+                Step(Action.WRITE, camera_test_device, 'camera brightness 0'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                    lambda test, source, data: wait_sec(test, source, data, 3, "Brightness = 0")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 0'),
+                Step(Action.WAIT_FOR, camera_test_device, 'brightness: 0'),
+                Step(Action.WRITE, camera_test_device, 'camera brightness 127'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                    lambda test, source, data: wait_sec(test, source, data, 3, "Brightness = 127")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 0'),
+                Step(Action.WAIT_FOR, camera_test_device, 'brightness: 127'),
+            ]
+        )
+
+        get_image_quality_setting_contrast =Test(
+            name='get_image_quality_setting_contrast',
+            timeout=timeout,
+            setup=setup,
+            test=[
+                Step(Action.WRITE, camera_test_device, 'camera videostart'),
+                Step(Action.WAIT_FOR, camera_test_device, 'test_vidioc_s_param'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                    lambda test, source, data: wait_sec(test, source, data, 3, "Video start (Default setting)")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 1'),
+                Step(Action.WAIT_FOR, camera_test_device, 'contrast: 128'),
+                Step(Action.WRITE, camera_test_device, 'camera contrast 0'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                    lambda test, source, data: wait_sec(test, source, data, 3, "contrast = 0")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 1'),
+                Step(Action.WAIT_FOR, camera_test_device, 'contrast: 0'),
+                Step(Action.WRITE, camera_test_device, 'camera contrast 127'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                    lambda test, source, data: wait_sec(test, source, data, 3, "contrast = 127")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 1'),
+                Step(Action.WAIT_FOR, camera_test_device, 'contrast: 127'),
+                Step(Action.WRITE, camera_test_device, 'camera contrast 255'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                    lambda test, source, data: wait_sec(test, source, data, 3, "contrast = 255")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 1'),
+                Step(Action.WAIT_FOR, camera_test_device, 'contrast: 255'),
+            ]
+        )
+
+        get_image_quality_setting_staturation =Test(
+            name='get_image_quality_setting_01_saturation',
+            timeout=timeout,
+            setup=setup,
+            test=[
+                Step(Action.WRITE, camera_test_device, 'camera videostart'),
+                Step(Action.WAIT_FOR, camera_test_device, 'test_vidioc_s_param'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                    lambda test, source, data: wait_sec(test, source, data, 3, "Video start (Default setting)")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 2'),
+                Step(Action.WAIT_FOR, camera_test_device, 'saturation: 128'),
+                Step(Action.WRITE, camera_test_device, 'camera saturation 0'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                    lambda test, source, data: wait_sec(test, source, data, 3, "contrast = 0")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 2'),
+                Step(Action.WAIT_FOR, camera_test_device, 'saturation: 0'),
+                Step(Action.WRITE, camera_test_device, 'camera saturation 127'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                    lambda test, source, data: wait_sec(test, source, data, 3, "contrast = 127")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 2'),
+                Step(Action.WAIT_FOR, camera_test_device, 'saturation: 127'),
+                Step(Action.WRITE, camera_test_device, 'camera saturation 255'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                    lambda test, source, data: wait_sec(test, source, data, 3, "contrast = 255")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 2'),
+                Step(Action.WAIT_FOR, camera_test_device, 'saturation: 255'),
+            ]
+        )
+
+        get_image_quality_setting_hue =Test(
+            name='get_image_quality_setting_hue',
+            timeout=timeout,
+            setup=setup,
+            test=[
+                Step(Action.WRITE, camera_test_device, 'camera videostart'),
+                Step(Action.WAIT_FOR, camera_test_device, 'test_vidioc_s_param'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                    lambda test, source, data: wait_sec(test, source, data, 3, "Video start (Default setting)")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 3'),
+                Step(Action.WAIT_FOR, camera_test_device, 'hue: 0'),
+                Step(Action.WRITE, camera_test_device, 'camera hue 0'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 3, "HUE = 0")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera hue 32'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 3, "HUE = 32")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera hue 64'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 3, "HUE = 64")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera hue 96'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 3, "HUE = 96")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera hue 128'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 3, "HUE = 128")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera hue 160'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 3, "HUE = 160")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera hue 192'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 3, "HUE = 192")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera hue 224'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 3, "HUE = 224")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera hue 255'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 3, "HUE = 255")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 3'),
+                Step(Action.WAIT_FOR, camera_test_device, 'hue: 255'),
+            ]
+        )
+
+        get_image_quality_setting_awb =Test(
+            name='get_image_quality_setting_awb',
+            timeout=timeout,
+            setup=setup,
+            test=[
+                Step(Action.WRITE, camera_test_device, 'camera videostart'),
+                Step(Action.WAIT_FOR, camera_test_device, 'test_vidioc_s_param'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                    lambda test, source, data: wait_sec(test, source, data, 3, "Video start (Default setting)")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 4'),
+                Step(Action.WAIT_FOR, camera_test_device, 'auto white balance: 2'),
+                Step(Action.WRITE, camera_test_device, 'camera awb 0'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                    lambda test, source, data: wait_sec(test, source, data, 3, "awb = 0")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 4'),
+                Step(Action.WAIT_FOR, camera_test_device, 'auto white balance: 0'),
+                Step(Action.WRITE, camera_test_device, 'camera awb 1'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                    lambda test, source, data: wait_sec(test, source, data, 3, "awb = 1")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 4'),
+                Step(Action.WAIT_FOR, camera_test_device, 'auto white balance: 2'),
+                #本当は1とかが返ってほしいんだけど…
+                #それは人間側が0/1をoff/onに決めてるだけなので、設定したときに機械が2を返してくるならそれが正しいのだろう
+
+            ]
+        )
+
+        get_image_quality_setting_redbalance =Test(
+            name='get_image_quality_setting_redbalance',
+            timeout=timeout,
+            setup=setup,
+            test=[
+                Step(Action.WRITE, camera_test_device, 'camera videostart'),
+                Step(Action.WAIT_FOR, camera_test_device, 'test_vidioc_s_param'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                    lambda test, source, data: wait_sec(test, source, data, 3, "Video start (Default setting)")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 5'),
+                Step(Action.WAIT_FOR, camera_test_device, 'redbalance: 0'),
+                Step(Action.WRITE, camera_test_device, 'camera redbalance: 32768'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                    lambda test, source, data: wait_sec(test, source, data, 3, "redbalance = 0")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 5'),
+                Step(Action.WAIT_FOR, camera_test_device, 'redbalace: 32768'),
+                Step(Action.WRITE, camera_test_device, 'camera redbalance 65565'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                    lambda test, source, data: wait_sec(test, source, data, 3, "redbalance = 127")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 5'),
+                Step(Action.WAIT_FOR, camera_test_device, 'redbalance: 65535'),
+            ]
+        )
+
+        get_image_quality_setting_bluebalance =Test(
+            name='get_image_quality_setting_bluebalance',
+            timeout=timeout,
+            setup=setup,
+            test=[
+                Step(Action.WRITE, camera_test_device, 'camera videostart'),
+                Step(Action.WAIT_FOR, camera_test_device, 'test_vidioc_s_param'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                    lambda test, source, data: wait_sec(test, source, data, 3, "Video start (Default setting)")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 6'),
+                Step(Action.WAIT_FOR, camera_test_device, 'bluebalance: 0'),
+                Step(Action.WRITE, camera_test_device, 'camera bluebalance: 32768'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                    lambda test, source, data: wait_sec(test, source, data, 3, "bluebalance = 0")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 6'),
+                Step(Action.WAIT_FOR, camera_test_device, 'bluebalace: 32768'),
+                Step(Action.WRITE, camera_test_device, 'camera bluebalance 65565'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                    lambda test, source, data: wait_sec(test, source, data, 3, "bluebalance = 127")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 6'),
+                Step(Action.WAIT_FOR, camera_test_device, 'bluebalance: 65535'),
+            ]
+        )
+
+        get_image_quality_setting_gamma =Test(
+            name='get_image_quality_setting_gamma',
+            timeout=timeout,
+            setup=setup,
+            test=[
+                Step(Action.WRITE, camera_test_device, 'camera videostart'),
+                Step(Action.WAIT_FOR, camera_test_device, 'test_vidioc_s_param'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 5, "Video start (Default setting)")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 7'),
+                Step(Action.WAIT_FOR, camera_test_device, 'gamma: 7'),
+                Step(Action.WRITE, camera_test_device, 'camera gamma 0'),
+                Step(Action.WAIT_FOR, camera_test_device, 'gamma change test'),
+                Step(Action.WAIT_FOR, camera_test_device, 'gamma change test'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 5, "Gamma = 0")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 7'),
+                Step(Action.WAIT_FOR, camera_test_device, 'gamma: 0'),
+                Step(Action.WRITE, camera_test_device, 'camera gamma 3'),
+                Step(Action.WAIT_FOR, camera_test_device, 'gamma change test'),
+                Step(Action.WAIT_FOR, camera_test_device, 'gamma change test'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 5, "Gamma = 3")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                #gammaは19個の値を設定して……なんだけど、これの場合valueがどう返ってくるのヵわからない
+            ]
+        )
+
+        get_image_quality_setting_exposure = Test(
+            name='get_image_quality_setting_exposure',
+            timeout=timeout,
+            setup=setup,
+            test=[
+                Step(Action.WRITE, camera_test_device, 'camera videostart'),
+                Step(Action.WAIT_FOR, camera_test_device, 'test_vidioc_s_param'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 5, "Video start (Default setting)")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 9'),
+                Step(Action.WAIT_FOR, camera_test_device, 'exposure: 0'),
+
+                Step(Action.WRITE, camera_test_device, 'camera exposure -6'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 5, "Exposure = -6")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 9'),
+                Step(Action.WAIT_FOR, camera_test_device, 'exposure: -6'),
+
+                Step(Action.WRITE, camera_test_device, 'camera exposure 0'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 5, "Exposure = 0")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 9'),
+                Step(Action.WAIT_FOR, camera_test_device, 'exposure: 0'),
+
+                Step(Action.WRITE, camera_test_device, 'camera exposure 6'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 5, "Exposure = 6")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 9'),
+                Step(Action.WAIT_FOR, camera_test_device, 'exposure: 6'),
+#これも買ってくる値が設定値-6のときに250とかになる
+            ],
+            teardown=teardown
+        )
+
+        get_image_quality_setting_hflip = Test(
+            name='get_image_quality_setting_hflip',
+            timeout=timeout,
+            setup=setup,
+            test=[
+                    Step(Action.WRITE, camera_test_device, 'camera videostart'),
+                    Step(Action.WAIT_FOR, camera_test_device, 'test_vidioc_s_param'),
+                    Step(Action.EXECUTE, camera_test_device, None,
+                         lambda test, source, data: wait_sec(test, source, data, 5, "Video start (Default setting)")),
+                    Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                    Step(Action.WRITE, camera_test_device, 'camera check 10'),
+                    Step(Action.WAIT_FOR, camera_test_device, 'hflip: 0'),
+                    Step(Action.WRITE, camera_test_device, 'camera check 12'),
+                    Step(Action.WAIT_FOR, camera_test_device, 'hflip_still: 0'),
+                    Step(Action.WRITE, camera_test_device, 'camera hflip 1'),
+                    Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                    Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                    Step(Action.EXECUTE, camera_test_device, None,
+                         lambda test, source, data: wait_sec(test, source, data, 5, "Hflip ON")),
+                    Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                    Step(Action.WRITE, camera_test_device, 'camera check 10'),
+                    Step(Action.WAIT_FOR, camera_test_device, 'hflip: 1'),
+                    Step(Action.WRITE, camera_test_device, 'camera check 12'),
+                    Step(Action.WAIT_FOR, camera_test_device, 'hflip_still: 1'),
+
+                    Step(Action.WRITE, camera_test_device, 'camera hflip 0'),
+                    Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                    Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                    Step(Action.EXECUTE, camera_test_device, None,
+                         lambda test, source, data: wait_sec(test, source, data, 5, "Hflip OFF")),
+                    Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                    Step(Action.WRITE, camera_test_device, 'camera check 10'),
+                    Step(Action.WAIT_FOR, camera_test_device, 'hflip: 0'),
+                    Step(Action.WRITE, camera_test_device, 'camera check 12'),
+                    Step(Action.WAIT_FOR, camera_test_device, 'hflip_still: 0'),
+
+            ],
+            teardown=teardown
+        )
+
+
+        get_image_quality_setting_vflip = Test(
+            name='get_image_quality_setting_vflip',
+            timeout=timeout,
+            setup=setup,
+            test=[
+                    Step(Action.WRITE, camera_test_device, 'camera videostart'),
+                    Step(Action.WAIT_FOR, camera_test_device, 'test_vidioc_s_param'),
+                    Step(Action.EXECUTE, camera_test_device, None,
+                         lambda test, source, data: wait_sec(test, source, data, 5, "Video start (Default setting)")),
+                    Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                    Step(Action.WRITE, camera_test_device, 'camera check 11'),
+                    Step(Action.WAIT_FOR, camera_test_device, 'vflip: 0'),
+                    Step(Action.WRITE, camera_test_device, 'camera check 13'),
+                    Step(Action.WAIT_FOR, camera_test_device, 'vflip_still: 0'),
+                    Step(Action.WRITE, camera_test_device, 'camera vflip 1'),
+                    Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                    Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                    Step(Action.EXECUTE, camera_test_device, None,
+                         lambda test, source, data: wait_sec(test, source, data, 5, "Vflip ON")),
+                    Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                    Step(Action.WRITE, camera_test_device, 'camera check 11'),
+                    Step(Action.WAIT_FOR, camera_test_device, 'vflip: 1'),
+                    Step(Action.WRITE, camera_test_device, 'camera check 13'),
+                    Step(Action.WAIT_FOR, camera_test_device, 'vflip_still: 1'),
+
+                    Step(Action.WRITE, camera_test_device, 'camera vflip 0'),
+                    Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                    Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                    Step(Action.EXECUTE, camera_test_device, None,
+                         lambda test, source, data: wait_sec(test, source, data, 5, "Vflip OFF")),
+                    Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                    Step(Action.WRITE, camera_test_device, 'camera check 11'),
+                    Step(Action.WAIT_FOR, camera_test_device, 'vflip: 0'),
+                    Step(Action.WRITE, camera_test_device, 'camera check 13'),
+                    Step(Action.WAIT_FOR, camera_test_device, 'vflip_still: 0'),
+
+            ],
+            teardown=teardown
+        )
+
+
+
+        get_image_quality_setting_sharpness = Test(
+            name='get_image_quality_setting_sharpness',
+            timeout=timeout,
+            setup=setup,
+            test=[
+                Step(Action.WRITE, camera_test_device, 'camera videostart'),
+                Step(Action.WAIT_FOR, camera_test_device, 'test_vidioc_s_param'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 5, "Video start (Default setting)")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 14'),
+                Step(Action.WAIT_FOR, camera_test_device, 'sharpness: 0'),
+
+                Step(Action.WRITE, camera_test_device, 'camera sharpness 0'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 5, "Sharpness = 0")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 14'),
+                Step(Action.WAIT_FOR, camera_test_device, 'sharpness: 0'),
+
+                Step(Action.WRITE, camera_test_device, 'camera sharpness 128'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 5, "Sharpness = 128")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 14'),
+                Step(Action.WAIT_FOR, camera_test_device, 'sharpness: 128'),
+
+                Step(Action.WRITE, camera_test_device, 'camera sharpness 255'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 5, "Sharpness = 255")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 14'),
+                Step(Action.WAIT_FOR, camera_test_device, 'sharpness: 255'),
+
+            ],
+            teardown=teardown
+        )
+
+        get_image_quality_setting_colorkill = Test(
+            name='get_image_quality_setting_colorkill',
+            timeout=timeout,
+            setup=setup,
+            test=[
+                Step(Action.WRITE, camera_test_device, 'camera videostart'),
+                Step(Action.WAIT_FOR, camera_test_device, 'test_vidioc_s_param'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 5, "Video start (Default setting)")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 15'),
+                Step(Action.WAIT_FOR, camera_test_device, 'color killer: 0'),
+                Step(Action.WRITE, camera_test_device, 'camera colorkill 1'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 5, "Colorkill ON")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                    Step(Action.WRITE, camera_test_device, 'camera check 15'),
+                    Step(Action.WAIT_FOR, camera_test_device, 'color killer: 1'),
+                Step(Action.WRITE, camera_test_device, 'camera colorkill 0'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 5, "Colorkill OFF")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 15'),
+                Step(Action.WAIT_FOR, camera_test_device, 'color killer: 0'),
+
+
+
+            ],
+            teardown=teardown
+        )
+
+
+        get_image_quality_setting_colorfx = Test(
+            name='get_image_quality_setting_colorfx',
+            timeout=timeout,
+            setup=setup,
+            test=[
+                Step(Action.WRITE, camera_test_device, 'camera videostart'),
+                Step(Action.WAIT_FOR, camera_test_device, 'test_vidioc_s_param'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 5, "Video start (Default setting)")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 16'),
+                Step(Action.WAIT_FOR, camera_test_device, 'color fx: 0'),
+
+
+                Step(Action.WRITE, camera_test_device, 'camera colorfx 0'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 5, "Colorfx = 0")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 16'),
+                Step(Action.WAIT_FOR, camera_test_device, 'color fx: 0'),
+
+                Step(Action.WRITE, camera_test_device, 'camera colorfx 1'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 5, "Colorfx = 1")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 16'),
+                Step(Action.WAIT_FOR, camera_test_device, 'color fx: 1'),
+
+                Step(Action.WRITE, camera_test_device, 'camera colorfx 2'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 5, "Colorfx = 2")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 16'),
+                Step(Action.WAIT_FOR, camera_test_device, 'color fx: 2'),
+
+                Step(Action.WRITE, camera_test_device, 'camera colorfx 3'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 5, "Colorfx = 3")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 16'),
+                Step(Action.WAIT_FOR, camera_test_device, 'color fx: 3'),
+
+                Step(Action.WRITE, camera_test_device, 'camera colorfx 5'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 5, "Colorfx = 5")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 16'),
+                Step(Action.WAIT_FOR, camera_test_device, 'color fx: 5'),
+
+                Step(Action.WRITE, camera_test_device, 'camera colorfx 13'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 5, "Colorfx = 13")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 16'),
+                Step(Action.WAIT_FOR, camera_test_device, 'color fx: 13'),
+
+                Step(Action.WRITE, camera_test_device, 'camera colorfx 16'),
+                Step(Action.WAIT_FOR, camera_test_device, 'ioctl calling'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: wait_sec(test, source, data, 5, "Colorfx = 16")),
+                Step(Action.WAIT_FOR, camera_test_device, 'wait sec completed'),
+                Step(Action.WRITE, camera_test_device, 'camera check 16'),
+                Step(Action.WAIT_FOR, camera_test_device, 'color fx: 16'),
+
+
+            ],
+            teardown=teardown
+        )
+
+        judge_supported_param_01 = Test(
+            name='judge_supported_param_01',
+            timeout=timeout,
+            setup=setup,
+            test=[
+                Step(Action.WRITE, camera_test_device, 'camera format 200 200'),
+                Step(Action.WAIT_FOR, camera_test_device, 'it can not videocapture, jpeg'),
+                Step(Action.WAIT_FOR, camera_test_device, 'it can on videocapture, yuv'),
+                Step(Action.WAIT_FOR, camera_test_device, 'it can on stillcapture, jpeg'),
+                Step(Action.WAIT_FOR, camera_test_device, 'it can on stillcapture, yuv'),
+                Step(Action.WRITE, camera_test_device, 'camera format 400 400'),
+                Step(Action.WAIT_FOR, camera_test_device, 'it can not videocapture, jpeg'),
+                Step(Action.WAIT_FOR, camera_test_device, 'it can not videocapture, yuv'),
+                Step(Action.WAIT_FOR, camera_test_device, 'it can on stillcapture, jpeg'),
+                Step(Action.WAIT_FOR, camera_test_device, 'it can not stillcapture, yuv'),
+
+#                Step(Action.WRITE, camera_test_device, 'camera format 300 300 300 200'),
+#                Step(Action.WAIT_FOR, camera_test_device, 'it can on videocapture, jpeg+yuv in jpeg'),
+#                Step(Action.WAIT_FOR, camera_test_device, 'it can on videocapture, jpeg+yuv in yuv'),
+#                Step(Action.WAIT_FOR, camera_test_device, 'it can on stillcaputure jepg+yuv in jpeg'),
+#                Step(Action.WAIT_FOR, camera_test_device, 'it can on stillcaputure jepg+yuv in yuv'),
+                #いつの日かサポートするとき、これが正しく取得できるようになる
+            ],
+            teardown=teardown
+        )
+
+        judge_supported_param_02 = Test(
+            name='judge_supported_param_02',
+            timeout=timeout,
+            setup=setup,
+            test=[
+                Step(Action.WRITE, camera_test_device, 'camera format 500 300'),
+                Step(Action.WAIT_FOR, camera_test_device, 'it can not videocapture, jpeg'),
+                Step(Action.WAIT_FOR, camera_test_device, 'it can not videocapture, yuv'),
+                Step(Action.WAIT_FOR, camera_test_device, 'it can on stillcapture, jpeg'),
+                Step(Action.WAIT_FOR, camera_test_device, 'it can not stillcapture, yuv'),
+                Step(Action.WRITE, camera_test_device, 'camera format 3000 1000'),
+                Step(Action.WAIT_FOR, camera_test_device, 'it can not videocapture, jpeg'),
+                Step(Action.WAIT_FOR, camera_test_device, 'it can not videocapture, yuv'),
+                Step(Action.WAIT_FOR, camera_test_device, 'it can not stillcapture, jpeg'),
+                Step(Action.WAIT_FOR, camera_test_device, 'it can not stillcapture, yuv'),
+                Step(Action.WRITE, camera_test_device, 'camera format 300 300 666 200'),
+                Step(Action.WAIT_FOR, camera_test_device, 'it can not videocapture, jpeg+yuv in jpeg'),
+                Step(Action.WAIT_FOR, camera_test_device, 'it can not videocapture, jpeg+yuv in yuv'),
+                Step(Action.WAIT_FOR, camera_test_device, 'it can not stillcaputure jepg+yuv in jpeg'),
+                Step(Action.WAIT_FOR, camera_test_device, 'it can not stillcaputure jepg+yuv in yuv'),
+            ],
+            teardown=teardown
+        )
+
+        ctrl_buf_01= Test(
+            name='ctrl_buf_01',
+            timeout=timeout,
+            setup=setup,
+            test=[
+            Step(Action.WRITE, camera_test_device, 'camera buftest 0'),
+            Step(Action.WAIT_FOR, camera_test_device, 'buffer test'),
+            Step(Action.WAIT_FOR, camera_test_device, 'buftest 0'),
+            Step(Action.WAIT_FOR, camera_test_device, 'test_vidioc_reqbufs'),
+            Step(Action.WAIT_FOR, camera_test_device, 'ok video, fifo'),
+            Step(Action.WAIT_FOR, camera_test_device, 'test_vidioc_reqbufs'),
+            Step(Action.WAIT_FOR, camera_test_device, 'ok, video ring'),
+            Step(Action.WAIT_FOR, camera_test_device, 'test_vidioc_reqbufs'),
+            Step(Action.WAIT_FOR, camera_test_device, 'ok still fifo'),
+            Step(Action.WAIT_FOR, camera_test_device, 'test_vidioc_reqbufs'),
+            Step(Action.WAIT_FOR, camera_test_device, 'ok still ring'),
+            ],
+            teardown=teardown
+        )
+
+        ctrl_buf_05= Test(
+            name='ctrl_buf_05',
+            timeout=timeout,
+            setup=setup,
+            test=[
+            Step(Action.WRITE, camera_test_device, 'camera buftest 1'),
+            Step(Action.WAIT_FOR, camera_test_device, 'Fail QBUF 12'),
+            ],
+            teardown=teardown
+        )
+
+        ctrl_buf_06= Test(
+            name='ctrl_buf_06',
+            timeout=timeout,
+            setup=setup,
+            test=[
+            Step(Action.WRITE, camera_test_device, 'camera buftest 2'),
+            Step(Action.EXECUTE, camera_test_device, None,
+                 lambda test, source, data: wait_sec(test, source, data, 5, "ctrl buf 06")),
+#DO FIX IT
+            ],
+            teardown=teardown
+        )
+
+        close_01 = Test(
+            name='close_01',
+            timeout=timeout,
+            setup=setup,
+            test=[
+                Step(Action.EXECUTE, camera_test_device, ('dut_img_mon', dut_img_monitor),
+                    Test.add_monitor),
+                    #モニターしてくれてんの？これ
+
+                Step(Action.WRITE, camera_test_device, 'camera init'),
+                Step(Action.WRITE, camera_test_device, 'free'),
+                Step(Action.WRITE, camera_test_device, 'camera open'),
+                Step(Action.WRITE, camera_test_device, 'free'),
+                Step(Action.WRITE, camera_test_device, 'camera close'),
+                Step(Action.WRITE, camera_test_device, 'free'),
+#もうwaitでfreeの値決め打ちとかで良いような気がするけど、
+#いろいろ変わってくる部分あると思うし値を保持して判定できたらいいなとおもう
+#そんな関数書いてなかったっけ？
+            ],
+            teardown=teardown
+        )
+
+        close_02 = Test(
+            name='close_02',
+            timeout=timeout,
+            setup=setup,
+            test=[
+                Step(Action.WRITE, camera_test_device, 'camera stillc'),
+                Step(Action.WAIT_FOR, camera_test_device, camera_test_device.STILL_DATA,
+                     lambda test, source, data: store_still_file_path(test, source, data)),
+                Step(Action.WAIT_FOR, camera_test_device, 'Stillc Confirmation'),
+                Step(Action.EXECUTE, camera_test_device, None,
+                     lambda test, source, data: mv_still_file(test, source, data)),
+
+            ],
+            teardown=teardown
+        )
+
+        close_03 = Test(
+            name='close_03',
+            timeout=timeout,
+            setup=setup,
+            test=[
+                Step(Action.WRITE, camera_test_device, 'camera streamon'),
+                Step(Action.WAIT_FOR, camera_test_device, 'video stream on test'),
+                Step(Action.WAIT_FOR, camera_test_device, 'stream on'),
+                Step(Action.WAIT_FOR, camera_test_device, 'stream on'),
+                Step(Action.WRITE, camera_test_device, 'camera close'),
+                Step(Action.WAIT_FOR, camera_test_device, 'closed'),
+            ],
+            teardown=teardown
+        )
+
+
+
+        get_image_quality_setting_hflip = Test(
+            name='get_image_quality_setting_hflip',
+            timeout=timeout,
+            setup=setup,
+            test=[
+
+            ],
+            teardown=teardown
+        )
+
+
+        camera_all = TestGroup(
+            name='camera',
+            devices=[camera_test_device],
+            tag=[Tag.POSITIVE],
+            tests=[
+                capture_01,
+                capture_02,
+                capture_03,
+                image_quality_01,
+                image_quality_02,
+                image_quality_03,
+                image_quality_04,
+                image_quality_05,
+                image_quality_06,
+                image_quality_07,
+                image_quality_08,
+                image_quality_09,
+                image_quality_10,
+                image_quality_11,
+                image_quality_12,
+                image_quality_13,
+                image_quality_14,
+                image_quality_15,
+                image_quality_16,
+                image_quality_17,
+                image_quality_18,
+                image_quality_19,
+                image_quality_20,
+                image_quality_21,
+                image_quality_22,
+                image_quality_23,
+                image_quality_24,
+                image_quality_25,
+                image_quality_26,
+                capture_jpeg_01,
+                capture_jpeg_02,
+                capture_jpeg_03,
+                capture_jpeg_04,
+                capture_jpeg_05,
+                capture_without_video_01,
+                capture_without_video_02,
+                capture_without_video_03,
+                capture_yuv_01,
+                capture_yuv_02,
+                capture_yuv_03,
+#                capture_yuv_jpeg_01,
+#                capture_yuv_jpeg_02,
+                capture_stream_ctrl_01,
+#                capture_stream_ctrl_02,
+                capture_stream_ctrl_03,
+                capture_stream_ctrl_04,
+                mode_transition_01,
+            ]
+        )
+
+        camera_develop = TestGroup(
+            name='camera_develop',
+            devices=[camera_test_device],
+            tag=[Tag.POSITIVE],
+            tests=[
+                mode_transition_01,
+            ]
+        )
+
+        camera_gr = TestGroup(
+            name='camera_develop',
+            devices=[camera_test_device],
+            tag=[Tag.POSITIVE],
+            tests=[
+               get_image_quality_setting_brightness,
+               get_image_quality_setting_contrast,
+               get_image_quality_setting_staturation,
+               get_image_quality_setting_hue,
+               get_image_quality_setting_awb,
+               get_image_quality_setting_redbalance,
+               get_image_quality_setting_bluebalance,
+               get_image_quality_setting_gamma,
+               get_image_quality_setting_exposure,
+               get_image_quality_setting_hflip,
+               get_image_quality_setting_vflip,
+               get_image_quality_setting_sharpness,
+               get_image_quality_setting_colorfx,
+               get_image_quality_setting_hflip,
+               judge_supported_param_01,
+               judge_supported_param_02,
+                 ctrl_buf_01,
+                 ctrl_buf_05,
+                 ctrl_buf_06,
+                 close_01,
+                 close_02,
+                 close_03,
+            ]
+        )
+
+
+        test_groups = [
+#            camera_all,
+#            camera_develop,
+            camera_gr,
+        ]
+
+        return test_groups
+
+
+if __name__ == "__main__":
+    parser = RunnerParser()
+    args = parser.parse_args()
+
+    if args.config is not None:
+        config = Config(os.path.abspath(args.config))
+    else:
+        config = Config(os.path.join('../../../', Config.DEFAULT_CONFIG_FILE))
+
+    # Create Device Manager
+    dev_manager = DeviceManager(config)
+
+    # Assign devices according to role
+    dut_device = dev_manager.get_devices_by_serials(args.dut_device)[0]
+
+    # Create test runner instance
+    tc_runner = CameraTestTcRunner(config, dut_device=dut_device)
+
+    # Configure logger
+    logger = TestLogger(log_name=tc_runner.name, console_debug=args.verbose)
+
+    # Run test groups from main function arguments
+    tc_runner.run(args, logger)

@@ -1,0 +1,46 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config SQA_TEST_MBEDTLS
+	bool "mbedtls test"
+	default n
+	---help---
+		Enable the mbedtls test
+
+if SQA_TEST_MBEDTLS
+
+config SQA_TEST_MBEDTLS_PROGNAME
+	string "Program name"
+	default "mbedtls"
+	depends on BUILD_KERNEL
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config SQA_TEST_MBEDTLS_PRIORITY
+	int "mbedtls task priority"
+	default 100
+
+config SQA_TEST_MBEDTLS_STACKSIZE
+	int "mbedtls stack size"
+	default 5120
+
+config SQA_TEST_MBEDTLS_DIGICERT_ROOTCA
+	string "DigiCert Global Root CA file"
+	default "/mnt/sd0/DigiCertGlobalRootCA.crt"
+
+config SQA_TEST_MBEDTLS_DIGICERT_ROOTG2
+	string "DigiCert Global Root G2 file"
+	default "/mnt/sd0/DigiCertGlobalRootG2.crt"
+
+config SQA_TEST_MBEDTLS_DIGICERT_HIGH_ROOTCA
+	string "DigiCert High Assuarance EV Root CA file"
+	default "/mnt/sd0/DigiCertHighAssuaranceEVRootCA.crt"
+
+config SQA_TEST_MBEDTLS_COMODO_ROOTCA
+	string "Comodo Root Certificate file"
+	default "/mnt/sd0/addtrustexternalcaroot.crt"
+
+endif

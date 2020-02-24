@@ -1,0 +1,51 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config SQAT_AUDIO_RECOG2
+	bool "Audio recognizer2 example"
+	default n
+	depends on CXD56_AUDIO
+	---help---
+		Enable the audio recognizer example
+
+if SQAT_AUDIO_RECOG2
+
+config SQAT_AUDIO_RECOG2_PROGNAME
+	string "Program name"
+	default "audio_recognizer"
+
+config SQAT_AUDIO_RECOG2_PRIORITY
+	int "Audio recognizer task priority"
+	default 100
+
+config SQAT_AUDIO_RECOG2_STACKSIZE
+	int "Audio recognizer stack size"
+	default 2048
+
+config SQAT_AUDIO_RECOG2_USEPREPROC
+	bool "Use pre process at Frontend"
+	default n
+
+#choice
+#	prompt "DSP worker Selection"
+#	default SQAT_AUDIO_RECOG2_DSP2
+
+config RECOG2_DSP1
+	tristate "using a Default DSP worker"
+	default y 
+
+config RECOG2_DSP2
+	tristate "using a second DSP worker to exchange"
+	default n
+
+config RECOG2_DSP3
+	tristate "using a DSP worker for load test"
+	default n
+#endchoice
+
+#config SQAT_AUDIO_RECOG2_SELECT
+#	bool "build RCGPROC2 for another dsp code"
+#	default n
+endif

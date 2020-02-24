@@ -1,0 +1,4 @@
+
+ifeq ($(CONFIG_TEST_ACA_UTIL),y)
+CONFIGURED_APPS += TestSoftware/sdk/system/aca_util
+endif

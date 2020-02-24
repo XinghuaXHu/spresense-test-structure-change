@@ -1,0 +1,50 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config SQA_COMBI_RECOG_PLAYER
+	bool "Audio recognizer and player"
+	default n
+	depends on CXD56_AUDIO
+	---help---
+		Enable the audio recognizer and player
+
+if SQA_COMBI_RECOG_PLAYER
+
+config SQA_COMBI_RECOG_PLAYER_PROGNAME
+	string "Program name"
+	default "recognizer_player"
+
+config SQA_COMBI_RECOG_PLAYER_PRIORITY
+	int "Audio recognizer task priority"
+	default 100
+
+config SQA_COMBI_RECOG_PLAYER_STACKSIZE
+	int "Audio recognizer stack size"
+	default 2048
+
+choice
+	prompt "Pre process"
+    default SQA_COMBI_RECOG_PLAYER_THROUGH
+	---help---
+        Select pre process which is applied at Frontend
+   
+config SQA_COMBI_RECOG_PLAYER_USEPREPROC
+	bool "User custom process"
+	---help---
+	    Use user custom process at Frontend
+
+config SQA_COMBI_RECOG_PLAYER_SAMPLERATECONV
+	bool "Sample rate converter"
+	---help---
+	    Use sample rate converter at Frontend
+
+config SQA_COMBI_RECOG_PLAYER_THROUGH
+	bool "Through"
+	---help---
+	    No signal processing is applied at Frontend
+
+endchoice
+
+endif
