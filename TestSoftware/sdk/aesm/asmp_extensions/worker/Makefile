@@ -40,7 +40,7 @@ include $(APPDIR)/Make.defs
 ALL_SUBDIRS = hello worker_extensions
 BUILD_SUBDIRS = hello worker_extensions
 
-ASMP_DIR = $(TOPDIR)/../test/sqa/singlefunction/asmp_extensions
+ASMP_DIR = $(TOPDIR)/../test/TestSoftware/sdk/aesm/asmp_extensions
 WORKER_DIR = $(ASMP_DIR)/worker
 ROMFS_DIR = $(WORKER_DIR)/romfs
 ROMFS_IMG = $(WORKER_DIR)/romfs.img
