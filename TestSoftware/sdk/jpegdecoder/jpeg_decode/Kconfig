@@ -1,0 +1,39 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config SQA_JPEG_DECODE
+	bool "JPEG decode sqa test app"
+	default n
+	---help---
+		Enable the JPEG decode example
+
+if SQA_JPEG_DECODE
+
+config SQA_JPEG_DECODE_PROGNAME
+	string "Program name"
+	default "jpeg_decode"
+	depends on BUILD_KERNEL
+	---help---
+		This is the name of the program that will be use when the NSH ELF
+		program is installed.
+
+config SQA_JPEG_DECODE_PRIORITY
+	int "JPEG decode task priority"
+	default 100
+
+config SQA_JPEG_DECODE_STACKSIZE
+	int "JPEG decode stack size"
+	default 3072
+
+config SQA_JPEG_DECODE_OUTPUT_LCD
+	bool "Output LCD"
+
+config SQA_JPEG_DECODE_OUTPUT_YUV_FILE
+	bool "Output YUV File"
+
+config SQA_JPEG_DECODE_OUTPUT_YUV_CHECKSUM
+	bool "Output YUV CheckSum"
+
+endif
