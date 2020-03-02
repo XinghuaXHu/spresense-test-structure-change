@@ -48,7 +48,7 @@ class Tag(object):
 
 
 class TestRunner(object):
-    def __init__(self, config):
+    def __init__(self, config,**kwargs):
         self.__name = self.__class__.__name__
 
         # Main configuration file
@@ -126,91 +126,15 @@ class TestRunner(object):
 
     # noinspection PyMethodMayBeStatic
     def setup(self, args, log=None):
-        filepath = os.path.join(os.getcwd(),JSONFILLE)
-
-        if os.path.exists(filepath) != True:
-            log.info('No testscript.json file ')
-            return
-        
-        json_data=open(filepath,encoding='utf-8')
-        data=json.load(json_data)
-        if data != None:
-           testsw_data = data[TESTSW]
-           if testsw_data!= None:
-               keys = testsw_data.keys()
-               num = 0
-               for key in keys:
-                   device_data = testsw_data[key]
-                   
-                   debug = not args.release
-                   device = eval('self.' + DEVICES[num] + '_device')
-                   build_bin = os.path.normpath(eval('args.' + DEVICES[num] +'_bin'))\
-                       if eval('args.' + DEVICES[num] +'_bin') else None
-                   
-                   num+=1
-                   binaries = self.build(debug, log, device_data, build_bin, device) 
-                   self.flash_n_check(device, binaries, log, device_data['appscheck'] if 'appscheck' in device_data.keys() else None )
-           else:
-                raise TesterException('testsw no data')
-        else:
-            raise TesterException('testscript.json file no data')
-            return
-
-    # noinspection PyUnresolvedReferences
-    def build(self, debug=True, log=None, device_data=None, device_bin=None, device=None):
-        toolbox = None
-        build_bin = device_bin
-        if not device_bin:
-            if log:
-                log.info('Building project sources')
-
-            toolbox = Toolbox(self.config, log)
-            toolbox.init_builder_module()
-
-            print('not device_bin')
-            log.info('Building {}'.format(device))
-            apps_path = []
-            defconfig_path = None
-            for defconfig in device_data['build_path']:
-                if 'examples' == defconfig.split('/')[0]:
-                    apps_path.append(defconfig) 
-                elif 'defconfig' == defconfig.split('/')[-1].split('-')[-1]:
-                    defconfig_path = os.path.join(os.getcwd(),TESTSW_PATH,defconfig)
-                    apps_path.append(defconfig_path.split('/')[-1].split('-')[0]) 
-
-            build_bin = self.__build_binary(toolbox, apps_path, device,defconfig_path)
-
-        return build_bin
-
-    @staticmethod
-    def __build_binary(toolbox, apps, device, defconfig):
-        bin_file = toolbox.builder.build_project(PROJECT, apps, device, defconfig)
-        return os.path.normpath(bin_file)
-
-    # noinspection PyMethodMayBeStatic
-    def flash_n_check(self, device, bin_path, log=None, apps=None):
-        if log:
-            log.info('Flashing ' + str(device))
-
-        device.flash(str(device), log, bin_path)
-        
-        if apps != None:
-           device.check_device_config(str(device), apps, log)
-
-        if os.path.basename(bin_path).startswith(str(device)):
-            try:
-                os.remove(bin_path)
-            except OSError as e:
-                log.error(e)
-                raise
+        raise NotImplementedError()
 
     # noinspection PyMethodMayBeStatic
     def generate_test_groups(self, args, log=None):
         raise NotImplementedError()
 
     # noinspection PyMethodMayBeStatic
-    #def build(self, debug=True, log=None, **kwargs):
-        #pass
+    def build(self, debug=True, log=None, **kwargs):
+        pass
 
     # noinspection PyMethodMayBeStatic
     def __setup(self, args):

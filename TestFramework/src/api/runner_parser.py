@@ -19,3 +19,11 @@ class RunnerParser(ArgumentParser):
         self.add_argument('--dut_device', metavar='SERIAL_PORT', help='Set Device Under Test')
         self.add_argument('--peer_device', metavar='SERIAL_PORT', help='Set peer device serial port')
         self.add_argument('-rc', '--repeat_count', type=int, help='Number of repeats')
+        self.add_argument('--dut_fs_ready', action='store_true',
+                          help='Dut device folders and files already created')
+        self.add_argument('--peer_fs_ready', action='store_true',
+                          help='Peer device folders and files already created')
+        self.add_argument('--preserve_dut_fs', action='store_true',
+                          help='Do not remove dut device folders and files after test')
+        self.add_argument('--preserve_peer_fs', action='store_true',
+                          help='Do not remove peer device folders and files after test')

@@ -12,18 +12,11 @@ SCRIPT_PATH = os.path.dirname(__file__)
 API_PATH = os.path.realpath(os.path.join(SCRIPT_PATH, "../../../..","TestFramework", "src"))
 
 sys.path.append(API_PATH)
-from api.device_manager import DeviceManager
-from api.tester_exception import TesterException
-from api.utils import Toolbox
 from api.runner import TestRunner, Tag
-from api.test import Test, Step, Action, TestGroup, TestLogger, Timer
-from api.config import Config
-from api.runner_parser import RunnerParser
+from api.test import Test, Step, Action, TestGroup, Timer
 from utilities.usbmsc_mount import mountCurrentUSBDisk, umountCurrentUSBDisk, runBashFunction
+from api.spresense_test_runner import SpresenseTestRunner
 
-sys.path.append(SCRIPT_PATH)
-from player_device import PlayerDevice
-from recorder_device import RecorderDevice
 
 UPDATER = 'updater.py'
 UPDATER_PATH = 'autotest/src/api'
@@ -401,18 +394,10 @@ def verify_recorded_file(test, source, data):
     return True
 
 
-class AudioRecorderHiTestTcRunner(TestRunner):
+class AudioRecorderHiTestTcRunner(SpresenseTestRunner):
 
-    def __init__(self, conf, **kwargs):
-        super(AudioRecorderHiTestTcRunner, self).__init__(conf)
-
-        self.dut_device = PlayerDevice(kwargs.get('dut_device', None), 'PLAYER_DEVICE') \
-            if kwargs.get('dut_device', None) else None
-        self.peer_device = RecorderDevice(kwargs.get('peer_device', None), 'RECORDER_DEVICE') \
-            if kwargs.get('peer_device', None) else None
-
-        if not all(self.get_devices_list()):
-            raise TesterException('At least two devices are needed!')
+    def __init__(self):
+        super(AudioRecorderHiTestTcRunner, self).__init__()
 
         self.updater = os.path.join(self.config.projects[0].path, UPDATER_PATH, UPDATER)
         self.audio_decoder = os.path.join(self.config.projects[0].path, DSP_PATH, DECODERS[1])
@@ -422,9 +407,6 @@ class AudioRecorderHiTestTcRunner(TestRunner):
         self.audio_file = os.path.join(os.getcwd(), DATA_PATH, AUDIO_FILE)
         self.audio_file2 = os.path.join(os.getcwd(), DATA_PATH, AUDIO_FILE2)
         self.audio_file3 = os.path.join(os.getcwd(), DATA_PATH, AUDIO_FILE3)
-
-    def get_devices_list(self):
-        return [self.dut_device, self.peer_device]
 
     def generate_test_groups(self, arguments, log=None):
         play_record_timeout = 1800
@@ -455,7 +437,7 @@ class AudioRecorderHiTestTcRunner(TestRunner):
             ]
 
         def player_setup(device, reboot_monitor, error_monitor):
-            if arguments.player_fs_ready:
+            if arguments.dut_fs_ready:
                 return setup_steps(device, reboot_monitor, error_monitor) +\
                        verify_sd_card_mount(device)
             else:
@@ -469,7 +451,7 @@ class AudioRecorderHiTestTcRunner(TestRunner):
             return setup_steps(device, reboot_monitor, error_monitor) + verify_sd_card_mount(device)
 
         def recorder_setup(device, reboot_monitor, error_monitor):
-            if arguments.recorder_fs_ready:
+            if arguments.peer_fs_ready:
                 return setup_steps(device, reboot_monitor, error_monitor) +\
                        verify_sd_card_mount(device)
             else:
@@ -601,13 +583,13 @@ class AudioRecorderHiTestTcRunner(TestRunner):
             ]
 
         def player_teardown(device):
-            if arguments.preserve_player_fs:
+            if arguments.preserve_dut_fs:
                 return teardown(device)
             else:
                 return clean_player_fs(device) + teardown(device)
 
         def recorder_teardown(device):
-            if arguments.preserve_recorder_fs:
+            if arguments.preserve_peer_fs:
                 return teardown(device) + remove_recorded_files_steps(device)
             else:
                 return clean_recorder_fs(device) + teardown(device)
@@ -628,8 +610,8 @@ class AudioRecorderHiTestTcRunner(TestRunner):
                 Step(Action.WAIT_FOR, player_device, player_device.RUNNING_TIME),
                 Step(Action.WAIT_FOR, player_device, player_device.RUNNING_TIME),
                 Step(Action.WAIT_FOR, player_device, player_device.RUNNING_TIME),
-                Step(Action.WAIT_FOR, player_device, player_device.PLAYER_EXIT),
-                Step(Action.WAIT_FOR, recorder_device, recorder_device.RECORDER_EXIT),
+                Step(Action.WAIT_FOR, player_device, 'Exit AudioPlayer example'),
+                Step(Action.WAIT_FOR, recorder_device, 'Exit AudioRecorder example'),
             ] + usb_s(recorder_device) + [
                 Step(Action.EXECUTE, recorder_device, None,
                      lambda test, source, data:
@@ -670,8 +652,8 @@ class AudioRecorderHiTestTcRunner(TestRunner):
                 Step(Action.WAIT_FOR, player_device, player_device.RUNNING_TIME),
                 Step(Action.WAIT_FOR, player_device, player_device.RUNNING_TIME),
                 Step(Action.WAIT_FOR, player_device, player_device.RUNNING_TIME),
-                Step(Action.WAIT_FOR, player_device, player_device.PLAYER_EXIT),
-                Step(Action.WAIT_FOR, recorder_device, recorder_device.RECORDER_EXIT),
+                Step(Action.WAIT_FOR, player_device, 'Exit AudioPlayer example'),
+                Step(Action.WAIT_FOR, recorder_device, 'Exit AudioRecorder example'),
             ] + usb_s(recorder_device) + [
                 Step(Action.EXECUTE, recorder_device, None,
                      lambda test, source, data:
@@ -712,8 +694,8 @@ class AudioRecorderHiTestTcRunner(TestRunner):
                 Step(Action.WAIT_FOR, player_device, player_device.RUNNING_TIME),
                 Step(Action.WAIT_FOR, player_device, player_device.RUNNING_TIME),
                 Step(Action.WAIT_FOR, player_device, player_device.RUNNING_TIME),
-                Step(Action.WAIT_FOR, player_device, player_device.PLAYER_EXIT),
-                Step(Action.WAIT_FOR, recorder_device, recorder_device.RECORDER_EXIT),
+                Step(Action.WAIT_FOR, player_device, 'Exit AudioPlayer example'),
+                Step(Action.WAIT_FOR, recorder_device, 'Exit AudioRecorder example'),
             ] + usb_s(recorder_device) + [
                 Step(Action.EXECUTE, recorder_device, None,
                      lambda test, source, data:
@@ -747,35 +729,5 @@ class AudioRecorderHiTestTcRunner(TestRunner):
 
 
 if __name__ == "__main__":
-    parser = RunnerParser()
-
-    parser.add_argument('--player_fs_ready', action='store_true',
-                        help='Player folders and files already created')
-    parser.add_argument('--recorder_fs_ready', action='store_true',
-                        help='Recorder folders and files already created')
-    parser.add_argument('--preserve_player_fs', action='store_true',
-                        help='Do not remove player folders and files after test')
-    parser.add_argument('--preserve_recorder_fs', action='store_true',
-                        help='Do not remove recorder folders and files after test')
-
-    args = parser.parse_args()
-
-    if args.config is not None:
-        config = Config(os.path.abspath(args.config))
-    else:
-        config = Config(os.path.join('../../../../TestFramework/', Config.DEFAULT_CONFIG_FILE))
-
-    # Create Device Manager
-    dev_manager = DeviceManager(config)
-
-    # Assign devices according to role
-    player, recorder = dev_manager.get_devices_by_serials(args.dut_device, args.peer_device)
-
     # Create test runner instance
-    tc_runner = AudioRecorderHiTestTcRunner(config, dut_device=player, peer_device=recorder)
-
-    # Configure logger
-    logger = TestLogger(log_name=tc_runner.name, console_debug=args.verbose)
-
-    # Run test groups from main function arguments
-    tc_runner.run(args, logger)
+    tc_runner = AudioRecorderHiTestTcRunner()
